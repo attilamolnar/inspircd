@@ -1,15 +1,26 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Pippijn van Steenhoven <pip88nl@gmail.com>
+ *   Copyright (C) 2006-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 Thomas Stagner <aquanight@inspircd.org>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2006 Oliver Lupton <oliverlupton@gmail.com>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include <openssl/ssl.h>
@@ -17,10 +28,15 @@
 #include "ssl.h"
 
 #ifdef WINDOWS
-#pragma comment(lib, "libeay32MTd")
-#pragma comment(lib, "ssleay32MTd")
-#undef MAX_DESCRIPTORS
-#define MAX_DESCRIPTORS 10000
+# pragma comment(lib, "libcrypto.lib")
+# pragma comment(lib, "libssl.lib")
+# pragma comment(lib, "user32.lib")
+# pragma comment(lib, "advapi32.lib")
+# pragma comment(lib, "libgcc.lib")
+# pragma comment(lib, "libmingwex.lib")
+# pragma comment(lib, "gdi32.lib")
+# undef MAX_DESCRIPTORS
+# define MAX_DESCRIPTORS 10000
 #endif
 
 /* $ModDesc: Provides SSL support for clients */

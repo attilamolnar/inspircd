@@ -1,15 +1,24 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2006 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "protocol.h"
@@ -84,7 +93,11 @@ SnomaskManager::SnomaskManager()
 
 void Snomask::SendMessage(const std::string &message, char mysnomask)
 {
-	if (message != LastMessage || mysnomask != LastLetter)
+	/* I thought it better to just add the Config check here instead of adding a whole
+		new if to do this job. Since as long as the config returns true every time
+		'Count' will never get above 1, and when it does Flush() it wont print the
+		stack line. - Shawn */
+	if (ServerInstance->Config->NoSnoticeStack || message != LastMessage || mysnomask != LastLetter)
 	{
 		this->Flush();
 		LastMessage = message;

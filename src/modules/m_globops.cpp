@@ -1,21 +1,29 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2007 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2004-2006 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Globops and +g support module by C.J.Edwards
+
+// Globops and snomask +g module by C.J.Edwards
 
 #include "inspircd.h"
 
-/* $ModDesc: Provides support for GLOBOPS and user mode +g */
+/* $ModDesc: Provides support for GLOBOPS and snomask +g */
 
 /** Handle /GLOBOPS
  */
@@ -55,7 +63,7 @@ class ModuleGlobops : public Module
 
 	virtual Version GetVersion()
 	{
-		return Version("Provides support for GLOBOPS and user mode +g", VF_VENDOR);
+		return Version("Provides support for GLOBOPS and snomask +g", VF_VENDOR);
 	}
 
 };

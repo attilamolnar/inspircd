@@ -1,19 +1,27 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2007 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2007 John Brooks <john.brooks@dereferenced.net>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 
-/* $ModDesc: Creates a snomask with notices whenever a new channel is created */
+/* $ModDesc: Provides snomasks 'j' and 'J', to which notices about newly created channels are sent */
 
 class ModuleChanCreate : public Module
 {
@@ -28,7 +36,7 @@ class ModuleChanCreate : public Module
 
 	Version GetVersion()
 	{
-		return Version("Creates a snomask with notices whenever a new channel is created",VF_VENDOR);
+		return Version("Provides snomasks 'j' and 'J', to which notices about newly created channels are sent",VF_VENDOR);
 	}
 
 
@@ -36,8 +44,14 @@ class ModuleChanCreate : public Module
 	{
 		if (created)
 		{
-			ServerInstance->SNO->WriteToSnoMask(IS_LOCAL(memb->user) ? 'j' : 'J', "Channel %s created by %s!%s@%s",
-				memb->chan->name.c_str(), memb->user->nick.c_str(), memb->user->ident.c_str(), memb->user->host.c_str());
+			if (IS_LOCAL(memb->user))
+				ServerInstance->SNO->WriteToSnoMask('j', "Channel %s created by %s!%s@%s",
+					memb->chan->name.c_str(), memb->user->nick.c_str(),
+					memb->user->ident.c_str(), memb->user->host.c_str());
+			else
+				ServerInstance->SNO->WriteGlobalSno('J', "Channel %s created by %s!%s@%s",
+					memb->chan->name.c_str(), memb->user->nick.c_str(),
+					memb->user->ident.c_str(), memb->user->host.c_str());
 		}
 	}
 };

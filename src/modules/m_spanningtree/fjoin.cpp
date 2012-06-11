@@ -1,15 +1,25 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2010 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2008 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "commands.h"
@@ -73,7 +83,7 @@ CmdResult CommandFJoin::Handle(const std::vector<std::string>& params, User *src
 		chan = new Channel(channel, TS);
 		if (incremental)
 		{
-			ServerInstance->SNO->WriteToSnoMask('d', "Incremental creation FJOIN recieved for %s, timestamp: %lu", chan->name.c_str(), (unsigned long)TS);
+			ServerInstance->SNO->WriteToSnoMask('d', "Incremental creation FJOIN received for %s, timestamp: %lu", chan->name.c_str(), (unsigned long)TS);
 			parameterlist resync;
 			resync.push_back(channel);
 			Utils->DoOneToOne(ServerInstance->Config->GetSID().c_str(), "RESYNC", resync, srcuser->uuid);
@@ -84,7 +94,7 @@ CmdResult CommandFJoin::Handle(const std::vector<std::string>& params, User *src
 		time_t ourTS = chan->age;
 
 		if (TS != ourTS)
-			ServerInstance->SNO->WriteToSnoMask('d', "Merge FJOIN recieved for %s, ourTS: %lu, TS: %lu, difference: %ld",
+			ServerInstance->SNO->WriteToSnoMask('d', "Merge FJOIN received for %s, ourTS: %lu, TS: %lu, difference: %ld",
 				chan->name.c_str(), (unsigned long)ourTS, (unsigned long)TS, (long)(ourTS - TS));
 		/* If our TS is less than theirs, we dont accept their modes */
 		if (ourTS < TS)
@@ -97,7 +107,7 @@ CmdResult CommandFJoin::Handle(const std::vector<std::string>& params, User *src
 			chan = Channel::Nuke(chan, channel, TS);
 			if (incremental)
 			{
-				ServerInstance->SNO->WriteToSnoMask('d', "Incremental merge FJOIN recieved for %s", chan->name.c_str());
+				ServerInstance->SNO->WriteToSnoMask('d', "Incremental merge FJOIN received for %s", chan->name.c_str());
 				parameterlist resync;
 				resync.push_back(channel);
 				Utils->DoOneToOne(ServerInstance->Config->GetSID().c_str(), "RESYNC", resync, srcuser->uuid);

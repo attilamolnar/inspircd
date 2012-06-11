@@ -1,30 +1,36 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2009-2010 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2008 Pippijn van Steenhoven <pip88nl@gmail.com>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2007 Carsten Valdemar Munk <carsten.munk+inspircd@gmail.com>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
  *
- * Taken from the UnrealIRCd 4.0 SVN version, based on
- * InspIRCd 1.1.x.
- *
- * UnrealIRCd 4.0 (C) 2007 Carsten Valdemar Munk
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
- *
- * ---------------------------------------------------
- * Heavily based on SQLauth
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "account.h"
 
 #include <ldap.h>
+
+#ifdef WINDOWS
+# pragma comment(lib, "ldap.lib")
+# pragma comment(lib, "lber.lib")
+#endif
 
 /* $ModDesc: Allow/Deny connections based upon answer from LDAP server */
 /* $LinkerFlags: -lldap */
@@ -39,6 +45,7 @@ class ModuleLDAPAuth : public Module
 	std::string killreason;
 	std::string username;
 	std::string password;
+	std::vector<std::string> whitelistedcidrs;
 	int searchscope;
 	bool verbose;
 	bool useusername;
@@ -66,6 +73,7 @@ public:
 
 	void ReadConfig(ConfigReadStatus&)
 	{
+		whitelistedcidrs.clear();
 
 		base 			= ServerInstance->Config->GetTag("ldapauth")->getString("baserdn");
 		attribute		= ServerInstance->Config->GetTag("ldapauth")->getString("attribute");
@@ -78,6 +86,14 @@ public:
 		verbose			= ServerInstance->Config->GetTag("ldapauth")->getBool("verbose");		/* Set to true if failed connects should be reported to operators */
 		useusername		= ServerInstance->Config->GetTag("ldapauth")->getBool("userfield");
 		setaccount		= ServerInstance->Config->GetTag("ldapauth")->getBool("setaccount");
+		ConfigTagList whitelisttags	= ServerInstance->Config->GetTags("ldapwhitelist");
+
+		for (ConfigIter i = whitelisttags.first; i != whitelisttags.second; ++i)
+		{
+			std::string cidr = i->second->getString("cidr");
+			if (!cidr.empty())
+				whitelistedcidrs.push_back(cidr);
+		}
 
 		if (scope == "base")
 			searchscope = LDAP_SCOPE_BASE;
@@ -120,6 +136,15 @@ public:
 		{
 			ldapAuthed.set(user,1);
 			return;
+		}
+
+		for (std::vector<std::string>::iterator i = whitelistedcidrs.begin(); i != whitelistedcidrs.end(); i++)
+		{
+			if (InspIRCd::MatchCIDR(user->GetIPString(), *i, ascii_case_insensitive_map))
+			{
+				ldapAuthed.set(user,1);
+				return;
+			}
 		}
 
 		if (!CheckCredentials(user))

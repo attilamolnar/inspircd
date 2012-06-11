@@ -1,15 +1,24 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2007-2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include <signal.h>
 #include "exitcodes.h"
@@ -32,7 +41,6 @@ void InspIRCd::SignalHandler(int signal)
 void InspIRCd::Exit(int status)
 {
 #ifdef WINDOWS
-	delete WindowsIPC;
 	SetServiceStopped(status);
 #endif
 	if (this)
@@ -90,21 +98,12 @@ void InspIRCd::IncrementUID(int pos)
 	 * A again, in an iterative fashion.. so..
 	 * AAA9 -> AABA, and so on. -- w00t
 	 */
-	if (pos == 3)
+	if ((pos == 3) && (current_uid[3] == '9'))
 	{
 		// At pos 3, if we hit '9', we've run out of available UIDs, and need to reset to AAA..AAA.
-		if (current_uid[pos] == '9')
+		for (int i = 3; i < UUID_LENGTH-1; i++)
 		{
-			for (int i = 3; i < (UUID_LENGTH - 1); i++)
-			{
-				current_uid[i] = 'A';
-				pos  = UUID_LENGTH - 1;
-			}
-		}
-		else
-		{
-			// Buf if we haven't, just keep incrementing merrily.
-			current_uid[pos]++;
+			current_uid[i] = 'A';
 		}
 	}
 	else
@@ -136,34 +135,10 @@ void InspIRCd::IncrementUID(int pos)
  */
 std::string InspIRCd::GetUID()
 {
-	static int curindex = -1;
-
-	/*
-	 * If -1, we're setting up. Copy SID into the first three digits, 9's to the rest, null term at the end
-	 * Why 9? Well, we increment before we find, otherwise we have an unnecessary copy, and I want UID to start at AAA..AA
-	 * and not AA..AB. So by initialising to 99999, we force it to rollover to AAAAA on the first IncrementUID call.
-	 * Kind of silly, but I like how it looks.
-	 *		-- w
-	 */
-	if (curindex == -1)
-	{
-		current_uid[0] = Config->sid[0];
-		current_uid[1] = Config->sid[1];
-		current_uid[2] = Config->sid[2];
-
-		for (int i = 3; i < (UUID_LENGTH - 1); i++)
-			current_uid[i] = '9';
-
-		curindex = UUID_LENGTH - 2; // look at the end of the string now kthx, ignore null
-
-		// Null terminator. Important.
-		current_uid[UUID_LENGTH - 1] = '\0';
-	}
-
 	while (1)
 	{
 		// Add one to the last UID
-		this->IncrementUID(curindex);
+		this->IncrementUID(UUID_LENGTH - 2);
 
 		if (this->FindUUID(current_uid))
 		{

@@ -1,15 +1,21 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2010 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "protocol.h"
@@ -402,15 +408,15 @@ class ModuleAccount : public Module
 		for (AccountDB::const_iterator i = cmd.prov.db.begin(); i != cmd.prov.db.end(); ++i)
 		{
 			std::string name = i->first, ts = ConvToStr(i->second->ts);
-			target->SendCommand("ENCAP * SVSACCOUNT ADD " + name + " :" + ts);
-			target->SendCommand("ENCAP * SVSACCOUNT SET " + name + " " + ts + " hash_password "
+			target->SendEncap("SVSACCOUNT ADD " + name + " :" + ts);
+			target->SendEncap("SVSACCOUNT SET " + name + " " + ts + " hash_password "
 				+ ConvToStr(i->second->hash_password_ts) + " :" + i->second->hash + " " + i->second->password);
 			for(Extensible::ExtensibleStore::const_iterator it = i->second->GetExtList().begin(); it != i->second->GetExtList().end(); ++it)
 			{
 				ExtensionItem* item = it->first;
 				std::string value = item->serialize(FORMAT_NETWORK, i->second, it->second);
 				if (!value.empty())
-					target->SendCommand("ENCAP * SVSACCOUNT SET " + name + " " + ts + " " + item->name + " " + value);
+					target->SendEncap("SVSACCOUNT SET " + name + " " + ts + " " + item->name + " " + value);
 			}
 		}
 	}

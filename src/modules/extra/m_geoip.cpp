@@ -1,20 +1,31 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "xline.h"
 
 #include <GeoIP.h>
+
+#ifdef WINDOWS
+# pragma comment(lib, "GeoIP.lib")
+#endif
 
 /* $ModDesc: Provides a way to restrict users by country using GeoIP lookup */
 /* $LinkerFlags: -lGeoIP */
@@ -25,13 +36,16 @@ class ModuleGeoIP : public Module
 	GeoIP* gi;
 
  public:
-	ModuleGeoIP() : ext(EXTENSIBLE_USER, "geoip_cc", this)
+	ModuleGeoIP() : ext(EXTENSIBLE_USER, "geoip_cc", this), gi(NULL)
 	{
-		gi = GeoIP_new(GEOIP_STANDARD);
 	}
 
 	void init()
 	{
+		gi = GeoIP_new(GEOIP_STANDARD);
+		if (gi == NULL)
+			throw ModuleException("Unable to initialize geoip, are you missing GeoIP.dat?");
+
 		ServerInstance->Modules->AddService(ext);
 		Implementation eventlist[] = { I_OnSetConnectClass };
 		ServerInstance->Modules->Attach(eventlist, this, sizeof(eventlist)/sizeof(Implementation));

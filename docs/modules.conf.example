@@ -161,7 +161,7 @@
 #           capsmap="ABCDEFGHIJKLMNOPQRSTUVWXYZ! ">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-# Block colour module: Blocking colour-coded messages with cmode +c
+# Block color module: Blocking color-coded messages with cmode +c
 #<module name="m_blockcolor.so">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
@@ -210,7 +210,7 @@
 # specify some censor tags. See also:                                 #
 # http://wiki.inspircd.org/Modules/censor                             #
 #
-#<include file="censor.conf">
+#<include file="conf/censor.conf">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # CGI:IRC module: Adds support for automatic host changing in CGI:IRC
@@ -295,7 +295,7 @@
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Channel Names module: Allows disabling channels which have certain
-# characters in the channel name such as bold, colourcodes, etc which
+# characters in the channel name such as bold, colorcodes, etc which
 # can be quite annoying and allow users to on occasion have a channel
 # that looks like the name of another channel on the network.
 #<module name="m_channames.so">
@@ -515,8 +515,8 @@
 #  quitmsg           -  The message that users get if they attempt to
 #                       connect while the throttle is active.
 #
-#  bootwait          -  Amount of time to wait before enforcing the
-#                       throttling when the server just booted.
+#  bootwait          -  Amount of time in seconds to wait before enforcing
+#                       the throttling when the server just booted.
 #
 #<connflood seconds="30" maxconns="3" timeout="30"
 #   quitmsg="Throttled" bootwait="10">
@@ -692,7 +692,7 @@
 # specfiy below the path to the filter.conf file, or define some      #
 # <filter> tags.                                                      #
 #                                                                     #
-#<include file="filter.conf">
+#<include file="conf/filter.conf">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Gecosban: Implements extended ban r:, which stops anyone matching
@@ -750,12 +750,12 @@
 # specify below the path to the helpop.conf file, or if you like to   #
 # make a mess, define your helpop tags in this conf.                  #
 #                                                                     #
-#<include file="inspircd.helpop-full.example">
+#<include file="conf/inspircd.helpop-full.example">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # HIDECHANS module: Allows opers to hide their channels list from non-
 # opers by setting user mode +I on themselves.
-# <module name="m_hidechans.so">
+#<module name="m_hidechans.so">
 #
 # HIDECHANS can optionally prevent opers from seeing channels on a +I
 # user, for more privacy if set to true.
@@ -766,7 +766,7 @@
 # HIDEOPER module: Allows opers to hide their oper status from non-
 # opers by setting user mode +H on themselves.
 # This module is oper-only.
-# <module name="m_hideoper.so">
+#<module name="m_hideoper.so">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Hostchange module: Allows a different style of cloaking
@@ -823,6 +823,14 @@
 # http stats module: Provides basic stats pages over HTTP
 # Requires m_httpd.so to be loaded for it to function.
 #<module name="m_httpd_stats.so">
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+# http rehash module: Allows the configs to be rehashed over HTTP.
+# Requires m_httpd.so to be loaded for it to function.
+# Suggest to have m_httpd_acl loaded to enhance the security.
+#<module name="m_httpd_rehash.so">
+#<httpdacl path="/rehash*" types="whitelist" whitelist="127.0.0.*,192.168.*">
+#<httpdacl path="/rehash*" types="password" username="rehashuser" password="topsecret">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Ident: Provides RFC 1413 ident lookup support
@@ -911,6 +919,8 @@
 #           setaccount="no"                                           #
 #           verbose="yes">                                            #
 #                                                                     #
+# <ldapwhitelist cidr="10.42.0.0/16">                                 #
+#                                                                     #
 # The baserdn indicates the base DN to search in for users. Usually   #
 # this is 'ou=People,dc=yourdomain,dc=yourtld'.                       #
 #                                                                     #
@@ -941,6 +951,10 @@
 #                                                                     #
 # If setaccount is yes, the account name in m_services_account is set #
 # to the LDAP username that was authenticated                         #
+#                                                                     #
+# ldapwhitelist indicates that clients connecting from an IP in the   #
+# provided CIDR do not need to authenticate against LDAP. It can be   #
+# repeated to whitelist multiple CIDRs.                               #
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # LDAP oper configuration module: Adds the ability to authenticate    #
@@ -984,6 +998,12 @@
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Msg flood module: Adds message/notice flood protection (+f)
 #<module name="m_messageflood.so">
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+# MLOCK module: Adds support for server-side enforcement of services
+# side MLOCKs.  Basically, this module suppresses any mode change that
+# would likely be immediately bounced by services.
+#<module name="m_mlock.so">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # MySQL module: Allows other SQL modules to access MySQL databases
@@ -1509,8 +1529,8 @@
 # showfromopers="yes">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-# Shun module: Provides the /shun command, which stops a user executing 
-# most commands.
+# Shun module: Provides the /SHUN command, which stops a user from
+# executing all except configured commands.
 # This module is oper-only.
 # To use, SHUN must be in one of your oper class blocks.
 #<module name="m_shun.so">
@@ -1577,7 +1597,7 @@
 # your configuration file!                                            #
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-# Strip colour module: Adds the channel mode +S and extban S
+# Strip color module: Adds the channel mode +S and extban S
 #<module name="m_stripcolor.so">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
@@ -1762,9 +1782,10 @@
 # user       - Username for the vhost.                                #
 #                                                                     #
 # pass       - Password for the vhost.                                #
-#								      #
-# hash       - The hash for the specific user (optional)
-#              m_password_hash.so and a hashing module must be loaded for this to work
+#                                                                     #
+# hash       - The hash for the specific user (optional)              #
+#              m_password_hash.so and a hashing module must be loaded #
+#              for this to work                                       #
 #                                                                     #
 # host       - Vhost to set.                                          #
 #

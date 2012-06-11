@@ -1,15 +1,24 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2007-2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2005-2007 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 
@@ -40,9 +49,9 @@ class ModuleModesOnOper : public Module
 
 	virtual void OnPostOper(User* user, const std::string &opertype, const std::string &opername)
 	{
-		// whenever a user opers, go through the oper types, find their <type:modes>,
-		// and if they have one apply their modes. The mode string can contain +modes
-		// to add modes to the user or -modes to take modes from the user.
+		/* whenever a user opers, go through the oper types, find their <type:automodes>,
+			and if they have one apply their modes. The mode string can contain +modes
+			to add modes to the user or -modes to take modes from the user. */
 		std::string ThisOpersModes = user->oper->getConfig("automodes");
 		if (!ThisOpersModes.empty())
 		{

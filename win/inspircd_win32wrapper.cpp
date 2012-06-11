@@ -1,15 +1,26 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2009 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2007, 2009 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2007-2009 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 John Brooks <john.brooks@dereferenced.net>
+ *   Copyright (C) 2007 Burlex <???@???>
+ *   Copyright (C) 2007 Robin Burchell <robin+git@viroteck.net>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd_win32wrapper.h"
 #include "inspircd.h"
@@ -238,7 +249,7 @@ int printf_c(const char * format, ...)
 
 int optind = 1;
 char optarg[514];
-int getopt_long_only(int ___argc, char *const *___argv, const char *__shortopts, const struct option *__longopts, int *__longind)
+int getopt_long(int ___argc, char *const *___argv, const char *__shortopts, const struct option *__longopts, int *__longind)
 {
 	// burlex todo: handle the shortops, at the moment it only works with longopts.
 
@@ -556,7 +567,7 @@ int clock_gettime(int clock, struct timespec * tv)
 
 	DWORD mstime = timeGetTime();
 	tv->tv_sec   = time(NULL);
-	tv->tv_usec  = (mstime - (tv->tv_sec * 1000)) * 1000000;
+	tv->tv_nsec  = (mstime - (tv->tv_sec * 1000)) * 1000000;
 	return 0;	
 }
 
@@ -696,3 +707,67 @@ int getcpu()
 
 	return cpu;
 }
+
+int random()
+{
+	return rand();
+}
+
+void srandom(unsigned int seed)
+{
+	srand(seed);
+}
+
+int gettimeofday(timeval *tv, void *)
+{
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+
+	tv->tv_sec = time(NULL);
+	tv->tv_usec = st.wMilliseconds;
+
+	return 0;
+}
+
+#include "../src/modules/m_spanningtree/link.h"
+#include "../src/modules/ssl.h"
+/* This is required to get these template functions generated in the main inspircd.exe build
+ * so modules may link to them ...
+ */
+static void unused_function()
+{
+	reference<Link> unused_Link;
+	reference<Autoconnect> unused_Autoconnect;
+	reference<ssl_cert> unused_Cert;
+	reference<Module> unused_Module;
+
+	if (unused_Link)
+		unused_Link->Port = -1;
+	if (unused_Autoconnect)
+		unused_Autoconnect->NextConnectTime = -1;
+	if (unused_Cert)
+		unused_Cert->dn = "";
+	if (unused_Module)
+		unused_Module->ModuleSourceFile = "";
+
+	Autoconnect *a = unused_Autoconnect;
+	Link *l = unused_Link;
+	ssl_cert *s = unused_Cert;
+	Module *m = unused_Module;
+
+	unused_Link = reference<Link>(unused_Link);
+	unused_Autoconnect = reference<Autoconnect>(unused_Autoconnect);
+	unused_Cert = reference<ssl_cert>(unused_Cert);
+	unused_Module = reference<Module>(unused_Module);
+
+	unused_Link = reference<Link>(l);
+	unused_Autoconnect = reference<Autoconnect>(a);
+	unused_Cert = reference<ssl_cert>(s);
+	unused_Module = reference<Module>(m);
+
+	delete unused_Link;
+	delete unused_Autoconnect;
+	delete unused_Cert;
+	delete unused_Module;
+}
+

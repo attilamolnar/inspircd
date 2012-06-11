@@ -1,30 +1,27 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2008 Thomas Stagner <aquanight@inspircd.org>
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LOGMANAGER_H
-#define __LOGMANAGER_H
 
-/** This class implements a nonblocking writer.
- * Most people writing an ircd give little thought to their disk
- * i/o. On a congested system, disk writes can block for long
- * periods of time (e.g. if the system is busy and/or swapping
- * a lot). If we just use a blocking fprintf() call, this could
- * block for undesirable amounts of time (half of a second through
- * to whole seconds). We DO NOT want this, so we make our logfile
- * nonblocking and hook it into the SocketEngine.
- * NB: If the operating system does not support nonblocking file
- * I/O (linux seems to, as does freebsd) this will default to
- * blocking behaviour.
+#ifndef LOGGER_H
+#define LOGGER_H
+
+/** Simple wrapper providing periodic flushing to a disk-backed file.
  */
 class CoreExport FileWriter
 {

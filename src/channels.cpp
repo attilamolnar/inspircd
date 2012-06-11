@@ -1,15 +1,28 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2010 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2006-2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2006, 2008 Oliver Lupton <oliverlupton@gmail.com>
+ *   Copyright (C) 2008 Pippijn van Steenhoven <pip88nl@gmail.com>
+ *   Copyright (C) 2003-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 Thomas Stagner <aquanight@inspircd.org>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "cull_list.h"
@@ -348,12 +361,16 @@ Channel* Channel::JoinUser(User *user, const std::string& cn, bool override, con
 
 	Ptr->WriteAllExcept(user, false, 0, except_list, "JOIN :%s", Ptr->name.c_str());
 
-	/* Show the on-join modes to everyone else */
-	std::string ms = memb->modes;
-	for(unsigned int i=0; i < memb->modes.length(); i++)
-		ms.append(" ").append(user->nick);
-	if ((Ptr->GetUserCounter() > 1) && (ms.length()))
-		Ptr->WriteAllExceptSender(user, ServerInstance->Config->CycleHostsFromUser, 0, "MODE %s +%s", Ptr->name.c_str(), ms.c_str());
+	/* Show the on-join modes to everyone who got the JOIN */
+	if ((Ptr->GetUserCounter() > 1) && (!memb->modes.empty()))
+	{
+		std::string ms = memb->modes;
+		for(unsigned int i=0; i < memb->modes.length(); i++)
+			ms.append(" ").append(user->nick);
+
+		except_list.insert(user);
+		Ptr->WriteAllExcept(user, !ServerInstance->Config->CycleHostsFromUser, 0, except_list, "MODE %s +%s", Ptr->name.c_str(), ms.c_str());
+	}
 
 	if (IS_LOCAL(user))
 	{
@@ -611,7 +628,7 @@ void Channel::WriteAllExcept(User* user, bool serversource, char status, CUList 
 	if (!text)
 		return;
 
-	int offset = snprintf(textbuffer,MAXBUF,":%s ", user->GetFullHost().c_str());
+	int offset = snprintf(textbuffer,MAXBUF,":%s ", serversource ? ServerInstance->Config->ServerName.c_str() : user->GetFullHost().c_str());
 
 	va_start(argsPtr, text);
 	vsnprintf(textbuffer + offset, MAXBUF - offset, text, argsPtr);
@@ -754,7 +771,6 @@ void Channel::UserList(User *user)
 			dlen = curlen = snprintf(list,MAXBUF,"%s %c %s :", user->nick.c_str(), this->IsModeSet('s') ? '@' : this->IsModeSet('p') ? '*' : '=', this->name.c_str());
 			ptr = list + dlen;
 
-			ptrlen = 0;
 			numusers = 0;
 		}
 

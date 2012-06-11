@@ -1,22 +1,29 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2010-2011 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* $ModDesc: Adds timed modes */
+
+/* $ModDesc: Adds timed mode changes */
 
 #include "inspircd.h"
 #include "protocol.h"
 // This isn't a listmode, but we need this anyway for the limit of the number of timed modes allowed.
 #include "u_listmode.h"
+#include <iterator> // For std::back_inserter
 
 /** Holds a timed mode
  */
@@ -351,7 +358,7 @@ class ModuleTimedModes : public Module
 			int maxModeLength = MAXBUF - 24 - channel->name.length() - ConvToStr(i->expire).length();
 			irc::modestacker modes = i->modes;
 			while(!modes.sequence.empty())
-				target->SendCommand("ENCAP * TMODE " + channel->name + " " + ConvToStr(i->expire) + " " + modes.popModeLine(FORMAT_NETWORK, maxModeLength, INT_MAX));
+				target->SendEncap("TMODE " + channel->name + " " + ConvToStr(i->expire) + " " + modes.popModeLine(FORMAT_NETWORK, maxModeLength, INT_MAX));
 		}
 	}
 

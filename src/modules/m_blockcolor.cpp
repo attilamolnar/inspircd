@@ -1,15 +1,26 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2011 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2004-2006, 2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 Thomas Stagner <aquanight@inspircd.org>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2005, 2007 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2006 Oliver Lupton <oliverlupton@gmail.com>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 
@@ -23,13 +34,13 @@ class BlockColor : public SimpleChannelModeHandler
 	BlockColor(Module* Creator) : SimpleChannelModeHandler(Creator, "blockcolor", 'c') { fixed_letter = false; }
 };
 
-class ModuleBlockColour : public Module
+class ModuleBlockColor : public Module
 {
 	bool AllowChanOps;
 	BlockColor bc;
  public:
 
-	ModuleBlockColour() : bc(this)
+	ModuleBlockColor() : bc(this)
 	{
 	}
 
@@ -54,7 +65,7 @@ class ModuleBlockColour : public Module
 			if (ServerInstance->CheckExemption(user,c,"blockcolor") != MOD_RES_ALLOW && !c->GetExtBanStatus(user, 'c').check(!c->IsModeSet(&bc)))
 				if (text.find_first_of("\x02\x03\x0f\x15\x16\x1f") != std::string::npos)
 				{
-					user->WriteNumeric(404, "%s %s :Can't send colours to channel (+c set)",user->nick.c_str(), c->name.c_str());
+					user->WriteNumeric(404, "%s %s :Can't send colors to channel (+c set)",user->nick.c_str(), c->name.c_str());
 					return MOD_RES_DENY;
 				}
 		}
@@ -79,7 +90,7 @@ class ModuleBlockColour : public Module
 				partmessage = "";
 	}
 
-	virtual ~ModuleBlockColour()
+	virtual ~ModuleBlockColor()
 	{
 	}
 
@@ -89,4 +100,4 @@ class ModuleBlockColour : public Module
 	}
 };
 
-MODULE_INIT(ModuleBlockColour)
+MODULE_INIT(ModuleBlockColor)

@@ -1,15 +1,22 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2007-2008 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include <vector>
 #include <string>
@@ -82,9 +89,9 @@ EPollEngine::~EPollEngine()
 	delete[] events;
 }
 
-static int mask_to_epoll(int event_mask)
+static unsigned mask_to_epoll(int event_mask)
 {
-	int rv = 0;
+	unsigned rv = 0;
 	if (event_mask & (FD_WANT_POLL_READ | FD_WANT_POLL_WRITE | FD_WANT_SINGLE_WRITE))
 	{
 		// we need to use standard polling on this FD
@@ -141,8 +148,8 @@ bool EPollEngine::AddFd(EventHandler* eh, int event_mask)
 
 void EPollEngine::OnSetEvent(EventHandler* eh, int old_mask, int new_mask)
 {
-	int old_events = mask_to_epoll(old_mask);
-	int new_events = mask_to_epoll(new_mask);
+	unsigned old_events = mask_to_epoll(old_mask);
+	unsigned new_events = mask_to_epoll(new_mask);
 	if (old_events != new_events)
 	{
 		// ok, we actually have something to tell the kernel about

@@ -2,7 +2,7 @@
 #  Helpop Standard  #
 #####################
 
-<alias text="HELPOP" replace="HELP $2-">
+<alias text="HELP" replace="HELPOP $2-">
 
 <helpop key="start" value="InspIRCd Help System
 
@@ -10,12 +10,12 @@ This system provides help for commands and modes.
 Specify your question or a command name as the
 parameter for this command.
 
-/HELP CUSER    -      To see a list of user commands
-/HELP COPER    -      To see a list of oper commands
-/HELP UMODES   -      To see a list of user modes
-/HELP CHMODES  -      To see a list of channel modes
-/HELP SNOMASKS -      To see a list of oper snotice masks
-/HELP EXTBANS  -      To see a list of extended bans">
+/HELPOP CUSER    -      To see a list of user commands
+/HELPOP COPER    -      To see a list of oper commands
+/HELPOP UMODES   -      To see a list of user modes
+/HELPOP CHMODES  -      To see a list of channel modes
+/HELPOP SNOMASKS -      To see a list of oper snotice masks
+/HELPOP EXTBANS  -      To see a list of extended bans">
 
 <helpop key="nohelp" value="There is no help for the topic
 you searched for. Please try again.">
@@ -207,8 +207,8 @@ A user may only set modes upon themselves, and may not set the
 +o usermode, and a user may only change channel modes of
 channels where they are at least a halfoperator.
 
-For a list of all user and channel modes, enter /HELP UMODES or
-/HELP CHMODES.">
+For a list of all user and channel modes, enter /HELPOP UMODES or
+/HELPOP CHMODES.">
 
 <helpop key="topic" value="/TOPIC [channel] {topic}
 
@@ -801,7 +801,7 @@ Closes all unregistered connections to the local server.">
               (IRCop only, requires invisible module).
  R            Blocks private messages from unregistered users
               (requires services account module).
- S            Strips mIRC colour/bold/underline codes out of private
+ S            Strips mIRC color/bold/underline codes out of private
               messages to the user (requires stripcolor module).
  W            Receives notification when a user uses WHOIS on them
               (IRCop only, requires showwhois module).">
@@ -828,7 +828,7 @@ Closes all unregistered connections to the local server.">
                     users to join while the channel is invite-only
                     (requires inviteexception module).
 
- c                  Blocks messages containing mIRC colour codes
+ c                  Blocks messages containing mIRC color codes
                     (requires blockcolor module).
  d [time]           Blocks messages to a channel from new users
                     until they have been in the channel for [time]
@@ -901,7 +901,7 @@ Closes all unregistered connections to the local server.">
                     (requires nokicks module)
  R                  Blocks unregistered users from joining (requires
                     services account module).
- S                  Strips mIRC colour codes from messages to the
+ S                  Strips mIRC color codes from messages to the
                     channel (requirs stripcolor module).
  T                  Blocks /NOTICEs to the channel from users who are
                     not at least halfop (requires nonotice module).
@@ -932,24 +932,30 @@ e  Show e-lines (local ban exemptions)
 g  Show g-lines (host bans)
 k  Show k-lines (local host bans)
 q  Show q-lines (nick mask bans)
-Z  Show z-lines (ip mask bans)
+Z  Show z-lines (IP mask bans)
+R  Show R-lines (regular expression bans)
 
+H  Show shuns
 s  Show filters
 C  Show channel bans
 
 c  Show link blocks
-l  Show all inbound and outbound server and client connections
+d  Show configured DNSBLs and related statistics
 m  Show command statistics, number of times commands have been used
 o  Show a list of all valid oper usernames and hostmasks
-p  Show open client ports, and the port type (ssl, plaintext, etc) plus number of users on each port
+p  Show open client ports, and the port type (ssl, plaintext, etc)
 u  Show server uptime
 z  Show memory usage statistics
-I  Show connect class permissions
+i  Show connect class permissions
+l  Show all client connections with information (sendq, commands, bytes, time connected)
 L  Show all client connections with information and IP address
 P  Show online opers and their idle times
 T  Show bandwidth/socket statistics
-U  Show u-lined servers
+U  Show U-lined servers
 Y  Show connection classes
+O  Show opertypes and the allowed user and channel modes it can set
+E  Show socket engine events
+S  Show currently held registered nicknames
 
 Note that all /STATS use is broadcast to online IRC operators.">
 
@@ -989,7 +995,7 @@ Note that all /STATS use is broadcast to online IRC operators.">
  Q      Allows receipt of remote quit messages.
  t      Allows receipt of attempts to use /STATS (local and remote).
  v      Allows receipt of oper-override notices (requires override module).
- x      Allows receipt of Xline notice (g/z/q/k/e).">
+ x      Allows receipt of Xline notices (g/z/q/k/e/R/shuns).">
 
 ######################
 #      EXTBANS       #
@@ -1026,7 +1032,7 @@ Matching extbans:
 
 Acting extbans:
 
- c:<ban>       Blocks any messages that contain colour codes from
+ c:<ban>       Blocks any messages that contain color codes from
                matching users (requires blockcolor module).
  m:<ban>       Blocks messages from matching users (requires muteban
                module). Users with +v or above are not affected.

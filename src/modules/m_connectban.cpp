@@ -1,20 +1,26 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "xline.h"
 
-/* $ModDesc: Throttles the connections of any users who try connect flood */
+/* $ModDesc: Throttles the connections of IP ranges who try to connect flood. */
 
 class ModuleConnectBan : public Module
 {
@@ -37,7 +43,7 @@ class ModuleConnectBan : public Module
 
 	virtual Version GetVersion()
 	{
-		return Version("Throttles the connections of any users who try connect flood", VF_VENDOR);
+		return Version("Throttles the connections of IP ranges who try to connect flood.", VF_VENDOR);
 	}
 
 	void ReadConfig(ConfigReadStatus&)

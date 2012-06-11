@@ -1,18 +1,29 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2011 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2007, 2009 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2005-2009 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2007-2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2008 Pippijn van Steenhoven <pip88nl@gmail.com>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _HASHCOMP_H_
-#define _HASHCOMP_H_
+
+#ifndef HASHCOMP_H
+#define HASHCOMP_H
 
 #include <cstring>
 #include <string>
@@ -91,7 +102,7 @@ namespace irc
 	 * Case sensitivity is ignored, and the RFC 'character set'
 	 * is adhered to
 	 */
-	struct StrHashComp
+	struct CoreExport StrHashComp
 	{
 		/** The operator () does the actual comparison in hash_map
 		 */
@@ -145,7 +156,7 @@ namespace irc
 		/** Remap a string so that comparisons for std::string match those
 		 * of irc::string; will be faster if doing many comparisons
 		 */
-		static std::string remap(const std::string& source);
+		static CoreExport std::string remap(const std::string& source);
 	};
 
 	/** Compose a hex string from raw data.
@@ -440,6 +451,15 @@ namespace irc
 	 * @return The new value with _ translated to space.
 	 */
 	CoreExport const char* Spacify(const char* n);
+
+	struct hash
+	{
+		/** Hash an irc::string using RFC1459 case sensitivity rules
+		 * @param s A string to hash
+		 * @return The hash value
+		 */
+		size_t CoreExport operator()(const irc::string &s) const;
+	};
 }
 
 /* Define operators for using >> and << with irc::string to an ostream on an istream. */
@@ -530,15 +550,6 @@ BEGIN_HASHMAP_NAMESPACE
 		size_t operator()(const std::string & s) const;
 	};
 #else
-
-	template<> struct hash<irc::string>
-	{
-		/** Hash an irc::string using RFC1459 case sensitivity rules
-		 * @param s A string to hash
-		 * @return The hash value
-		 */
-		size_t CoreExport operator()(const irc::string &s) const;
-	};
 
 	/* XXX FIXME: Implement a hash function overriding std::string's that works with TR1! */
 

@@ -1,15 +1,25 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2005-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2007 Burlex <???@???>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 
@@ -166,26 +176,34 @@ void SocketEngine::SetReuse(int fd)
 
 int SocketEngine::RecvFrom(EventHandler* fd, void *buf, size_t len, int flags, sockaddr *from, socklen_t *fromlen)
 {
-	this->UpdateStats(len, 0);
-	return recvfrom(fd->GetFd(), (char*)buf, len, flags, from, fromlen);
+	int nbRecvd = recvfrom(fd->GetFd(), (char*)buf, len, flags, from, fromlen);
+	if (nbRecvd > 0)
+		this->UpdateStats(nbRecvd, 0);
+	return nbRecvd;
 }
 
 int SocketEngine::Send(EventHandler* fd, const void *buf, size_t len, int flags)
 {
-	this->UpdateStats(0, len);
-	return send(fd->GetFd(), (char*)buf, len, flags);
+	int nbSent = send(fd->GetFd(), (const char*)buf, len, flags);
+	if (nbSent > 0)
+		this->UpdateStats(0, nbSent);
+	return nbSent;
 }
 
 int SocketEngine::Recv(EventHandler* fd, void *buf, size_t len, int flags)
 {
-	this->UpdateStats(len, 0);
-	return recv(fd->GetFd(), (char*)buf, len, flags);
+	int nbRecvd = recv(fd->GetFd(), (char*)buf, len, flags);
+	if (nbRecvd > 0)
+		this->UpdateStats(nbRecvd, 0);
+	return nbRecvd;
 }
 
 int SocketEngine::SendTo(EventHandler* fd, const void *buf, size_t len, int flags, const sockaddr *to, socklen_t tolen)
 {
-	this->UpdateStats(0, len);
-	return sendto(fd->GetFd(), (char*)buf, len, flags, to, tolen);
+	int nbSent = sendto(fd->GetFd(), (const char*)buf, len, flags, to, tolen);
+	if (nbSent > 0)
+		this->UpdateStats(0, nbSent);
+	return nbSent;
 }
 
 int SocketEngine::Connect(EventHandler* fd, const sockaddr *serv_addr, socklen_t addrlen)

@@ -9,7 +9,7 @@
 #   -- w00t 16/dec/2006
 #
 
-<alias text="HELPOP" replace="HELP $2-">
+<alias text="HELP" replace="HELPOP $2-">
 
 <helpop key="start" value="InspIRCd Help System
 
@@ -17,12 +17,12 @@ This system provides help for commands and modes.
 Specify your question or a command name as the
 parameter for this command.
 
-/HELP CUSER    -      To see a list of user commands
-/HELP COPER    -      To see a list of oper commands
-/HELP UMODES   -      To see a list of user modes
-/HELP CHMODES  -      To see a list of channel modes
-/HELP SNOMASKS -      To see a list of oper snotice masks
-/HELP EXTBANS  -      To see a list of extended bans">
+/HELPOP CUSER    -      To see a list of user commands
+/HELPOP COPER    -      To see a list of oper commands
+/HELPOP UMODES   -      To see a list of user modes
+/HELPOP CHMODES  -      To see a list of channel modes
+/HELPOP SNOMASKS -      To see a list of oper snotice masks
+/HELPOP EXTBANS  -      To see a list of extended bans">
 
 <helpop key="nohelp" value="There is no help for the topic
 you searched for. Please try again.">
@@ -107,7 +107,7 @@ LOCKSERV       UNLOCKSERV   JUMPSERVER">
               (IRCop only, requires invisible module).
  R            Blocks private messages from unregistered users
               (requires services account module).
- S            Strips mIRC colour/bold/underline codes out of private
+ S            Strips mIRC color/bold/underline codes out of private
               messages to the user (requires stripcolor module).
  W            Receives notification when a user uses WHOIS on them
               (IRCop only, requires showwhois module).">
@@ -134,7 +134,7 @@ LOCKSERV       UNLOCKSERV   JUMPSERVER">
                     users to join while the channel is invite-only
                     (requires inviteexception module).
 
- c                  Blocks messages containing mIRC colour codes
+ c                  Blocks messages containing mIRC color codes
                     (requires blockcolor module).
  f [*][lines]:[sec] Kicks on text flood equal to or above the
                     specified rate. With *, the user is banned
@@ -206,7 +206,7 @@ LOCKSERV       UNLOCKSERV   JUMPSERVER">
                     (requires nokicks module)
  R                  Blocks unregistered users from joining (requires
                     services account module).
- S                  Strips mIRC colour codes from messages to the
+ S                  Strips mIRC color codes from messages to the
                     channel (requirs stripcolor module).
  T                  Blocks /NOTICEs to the channel from users who are
                     not at least halfop (requires nonotice module).
@@ -249,12 +249,12 @@ help channel if you have any questions.">
  Q      Allows receipt of remote quit messages.
  t      Allows receipt of attempts to use /STATS (local and remote).
  v      Allows receipt of oper-override notices (requires override module).
- x      Allows receipt of Xline notice (g/z/q/k/e).">
+ x      Allows receipt of Xline notices (g/z/q/k/e/R/shuns).">
 
 <helpop key="extbans" value="Extended Bans
 ----------
 
- c:n!u@h      Blocks any messages that contain colour codes from
+ c:n!u@h      Blocks any messages that contain color codes from
               matching users (requires blockcolor module).
  j:#channel   Prevents anyone in #channel from joining the channel
               (requires channelban module).

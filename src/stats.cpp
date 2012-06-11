@@ -1,15 +1,21 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "command_parse.h"
@@ -21,7 +27,11 @@ void InspIRCd::DoStats(char statschar, User* user, string_list &results)
 {
 	std::string sn(this->Config->ServerName);
 
-	if (!user->HasPrivPermission("servers/auspex") && Config->UserStats.find(statschar) == std::string::npos)
+	bool isPublic = Config->UserStats.find(statschar) != std::string::npos;
+	bool isRemoteOper = !IS_LOCAL(user) && IS_OPER(user);
+	bool isLocalOperWithPrivs = IS_LOCAL(user) && user->HasPrivPermission("servers/auspex");
+
+	if (!isPublic && !isRemoteOper && !isLocalOperWithPrivs)
 	{
 		this->SNO->WriteToSnoMask('t',
 				"%s '%c' denied for %s (%s@%s)",
@@ -43,7 +53,7 @@ void InspIRCd::DoStats(char statschar, User* user, string_list &results)
 
 	switch (statschar)
 	{
-		/* stats p (show listening ports and registered clients on each) */
+		/* stats p (show listening ports) */
 		case 'p':
 		{
 			for (size_t i = 0; i < this->ports.size(); i++)
@@ -287,7 +297,7 @@ void InspIRCd::DoStats(char statschar, User* user, string_list &results)
 			}
 		break;
 
-	/* stats L (show user I/O stats with IP addresses) */
+		/* stats L (show user I/O stats with IP addresses) */
 		case 'L':
 			results.push_back(sn+" 211 "+user->nick+" :nick[ident@ip] sendq cmds_out bytes_out cmds_in bytes_in time_open");
 			for (std::vector<LocalUser*>::iterator n = this->Users->local_users.begin(); n != this->Users->local_users.end(); n++)

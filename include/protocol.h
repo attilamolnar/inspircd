@@ -1,18 +1,25 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PROTOCOL_H__
-#define __PROTOCOL_H__
+
+#ifndef PROTOCOL_H
+#define PROTOCOL_H
 
 class User;
 
@@ -46,10 +53,10 @@ class SyncTarget : public classbase
 	 */
 	virtual void SendEncap(const std::string& cmd, const parameterlist &params) = 0;
 	/**
-	 * Send a line s2s during netburst. The line should begin with the command you
-	 * are sending; ":SID " will be prepended prior to sending.
+	 * Send an ENCAP * command during netburst (for network sync)
+	 * @param line The rest of the line to send after ENCAP * (the receiver should have a handler for this)
 	 */
-	virtual void SendCommand(const std::string &line) = 0;
+	virtual void SendEncap(const std::string &line) = 0;
 };
 
 class ProtocolInterface

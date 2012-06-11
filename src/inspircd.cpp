@@ -1,15 +1,30 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2012 William Pitcock <nenolod@dereferenced.org>
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2003-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2008 Uli Schlachter <psychon@znc.in>
+ *   Copyright (C) 2006-2008 Robin Burchell <robin+git@viroteck.net>
+ *   Copyright (C) 2006-2007 Oliver Lupton <oliverlupton@gmail.com>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2007 Burlex <???@???>
+ *   Copyright (C) 2003 Craig McLure <craig@chatspike.net>
+ *   Copyright (C) 2003 randomdan <???@???>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "command_parse.h"
@@ -331,9 +346,6 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 #ifdef WIN32
 	// Strict, frequent checking of memory on debug builds
 	_CrtSetDbgFlag ( _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-
-	// Avoid erroneous frees on early exit
-	WindowsIPC = 0;
 #endif
 
 	ServerInstance = this;
@@ -561,7 +573,7 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 
 	/*
 	 * Initialise SID/UID.
- 	 * For an explanation as to exactly how this works, and why it works this way, see GetUID().
+ 	 * For an explanation as to exactly how this works, and why it works this way, see below.
 	 *   -- w00t
  	 */
 	if (Config->sid.empty())
@@ -578,6 +590,23 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 
 		Config->sid = sidstr;
 	}
+
+	/*
+	 * Copy SID into the first three digits, 9's to the rest, null term at the end
+	 * Why 9? Well, we increment before we find, otherwise we have an unnecessary copy, and I want UID to start at AAA..AA
+	 * and not AA..AB. So by initialising to 99999, we force it to rollover to AAAAA on the first IncrementUID call.
+	 * Kind of silly, but I like how it looks.
+	 *		-- w
+	 */
+	current_uid[0] = Config->sid[0];
+	current_uid[1] = Config->sid[1];
+	current_uid[2] = Config->sid[2];
+
+	for (int i = 3; i < (UUID_LENGTH - 1); i++)
+		current_uid[i] = '9';
+
+	// Null terminator. Important.
+	current_uid[UUID_LENGTH - 1] = '\0';
 
 	/* set up fake client again this time with the correct uid */
 	this->FakeClient = new FakeUser(Config->sid, Config->ServerName);
@@ -622,27 +651,39 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 		}
 	}
 
-	if (isatty(0) && isatty(1) && isatty(2))
+	/* Explicitly shut down stdio's stdin/stdout/stderr.
+	 *
+	 * The previous logic here was to only do this if stdio was connected to a controlling
+	 * terminal.  However, we must do this always to avoid information leaks and other
+	 * problems related to stdio.
+	 *
+	 * The only exception is if we are in debug mode.
+	 *
+	 *    -- nenolod
+	 */
+	if ((!do_nofork) && (!do_testsuite) && (!Config->cmdline.forcedebug))
 	{
-		/* We didn't start from a TTY, we must have started from a background process -
-		 * e.g. we are restarting, or being launched by cron. Dont kill parent, and dont
-		 * close stdin/stdout
-		 */
-		if (!do_nofork)
-		{
-			fclose(stdin);
-			fclose(stderr);
-			if (!Config->cmdline.forcedebug)
-				fclose(stdout);
-		}
-		else
-		{
-			Logs->Log("STARTUP", DEFAULT,"Keeping pseudo-tty open as we are running in the foreground.");
-		}
+		int fd;
+
+		fclose(stdin);
+		fclose(stderr);
+		fclose(stdout);
+
+		fd = open("/dev/null", O_RDWR);
+		if (dup2(fd, 0) < 0)
+			Logs->Log("STARTUP", DEFAULT, "Failed to dup /dev/null to stdin.");
+		if (dup2(fd, 1) < 0)
+			Logs->Log("STARTUP", DEFAULT, "Failed to dup /dev/null to stdout.");
+		if (dup2(fd, 2) < 0)
+			Logs->Log("STARTUP", DEFAULT, "Failed to dup /dev/null to stderr.");
+		close(fd);
+	}
+	else
+	{
+		Logs->Log("STARTUP", DEFAULT,"Keeping pseudo-tty open as we are running in the foreground.");
 	}
 #else
-	WindowsIPC = new IPC;
-	if(!Config->nofork)
+	if(!Config->cmdline.nofork)
 	{
 		WindowsForkKillOwner();
 		FreeConsole();
@@ -764,8 +805,6 @@ void InspIRCd::Run()
 			getrusage(RUSAGE_SELF, &ru);
 			stats->LastSampled = TIME;
 			stats->LastCPU = ru.ru_utime;
-#else
-			WindowsIPC->Check();
 #endif
 
 			/* Allow a buffer of two seconds drift on this so that ntpdate etc dont harass admins */

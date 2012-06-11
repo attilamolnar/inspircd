@@ -1,15 +1,26 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010, 2012 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2010 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2008 John Brooks <john.brooks@dereferenced.net>
+ *   Copyright (C) 2006-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
+ *   Copyright (C) 2006 Oliver Lupton <oliverlupton@gmail.com>
  *
- * This program is free but copyrighted software; see
- *	    the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include <gnutls/gnutls.h>
@@ -17,10 +28,6 @@
 #include <gcrypt.h>
 #include "ssl.h"
 #include "m_cap.h"
-
-#ifdef WINDOWS
-#pragma comment(lib, "libgnutls-13.lib")
-#endif
 
 /* $ModDesc: Provides SSL support for clients */
 /* $CompileFlags: pkgconfincludes("gnutls","/gnutls/gnutls.h","") */
@@ -42,10 +49,9 @@ struct DH_info : public refcountbase
 {
 	int bits;
 	gnutls_dh_params params;
-	DH_info()
+	DH_info(int Bits) : bits(Bits)
 	{
 		gnutls_dh_params_init(&params);
-		bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_NORMAL);
 		int ret = gnutls_dh_params_generate2(params, bits);
 		if (ret < 0)
 			ServerInstance->Logs->Log("m_ssl_gnutls",DEFAULT, "m_ssl_gnutls.so: Failed to generate DH parameters (%d bits): %s",
@@ -265,7 +271,7 @@ static ssize_t gnutls_pull_wrapper(gnutls_transport_ptr_t user_wrap, void* buffe
 		errno = EAGAIN;
 		return -1;
 	}
-	int rv = recv(user->GetFd(), buffer, size, 0);
+	int rv = ServerInstance->SE->Recv(user, buffer, size, 0);
 	if (rv < 0)
 	{
 		if (errno == EAGAIN || errno == EINTR)
@@ -288,7 +294,7 @@ static ssize_t gnutls_push_wrapper(gnutls_transport_ptr_t user_wrap, const void*
 		errno = EAGAIN;
 		return -1;
 	}
-	int rv = send(user->GetFd(), buffer, size, 0);
+	int rv = ServerInstance->SE->Send(user, buffer, size, 0);
 	if (rv < 0)
 	{
 		if (errno == EAGAIN || errno == EINTR)
@@ -780,9 +786,12 @@ class ModuleSSLGnuTLS : public Module
 
 		ConfigTag* Conf = ServerInstance->Config->GetTag("gnutls");
 
+		int dh_bits = Conf->getInt("dhbits");
 		std::string hashname = Conf->getString("hash", "md5");
 
-		dh = new DH_info();
+		if((dh_bits != 768) && (dh_bits != 1024) && (dh_bits != 2048) && (dh_bits != 3072) && (dh_bits != 4096))
+			dh_bits = 1024;
+		dh = new DH_info(dh_bits);
 
 		if (hashname == "md5")
 			hash = GNUTLS_DIG_MD5;

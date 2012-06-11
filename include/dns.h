@@ -1,15 +1,24 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2011 Jackmcbarn <jackmcbarn@jackmcbarn.no-ip.org>
+ *   Copyright (C) 2009 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2005-2008 Craig Edwards <craigedwards@brainbox.cc>
+ *   Copyright (C) 2007 Dennis Friis <peavey@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 /*
 dns.h - dns library very very loosely based on
@@ -29,8 +38,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef _DNS_H
-#define _DNS_H
+#ifndef DNS_H
+#define DNS_H
 
 /**
  * Result status, used internally
@@ -94,7 +103,7 @@ class CoreExport CachedQuery
 #if defined(WINDOWS) && !defined(HASHMAP_DEPRECATED)
 typedef nspace::hash_map<irc::string, CachedQuery, nspace::hash_compare<irc::string> > dnscache;
 #else
-typedef nspace::hash_map<irc::string, CachedQuery, nspace::hash<irc::string> > dnscache;
+typedef nspace::hash_map<irc::string, CachedQuery, irc::hash> dnscache;
 #endif
 
 /**

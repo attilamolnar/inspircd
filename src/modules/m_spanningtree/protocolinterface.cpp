@@ -1,3 +1,23 @@
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
+ *
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+ *   Copyright (C) 2008 Craig Edwards <craigedwards@brainbox.cc>
+ *
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 #include "inspircd.h"
 #include "main.h"
 #include "utils.h"
@@ -16,7 +36,7 @@ void SpanningTreeSyncTarget::SendMetaData(Extensible* target, const std::string 
 	if (u)
 		ts.WriteLine(std::string(":")+ServerInstance->Config->GetSID()+" METADATA "+u->uuid+" "+extname+" :"+extdata);
 	else if (c)
-		ts.WriteLine(std::string(":")+ServerInstance->Config->GetSID()+" METADATA "+c->name+" "+extname+" :"+extdata);
+		ts.WriteLine(std::string(":")+ServerInstance->Config->GetSID()+" METADATA "+c->name+" "+ConvToStr(c->age)+" "+extname+" :"+extdata);
 	else if (!target)
 		ts.WriteLine(std::string(":")+ServerInstance->Config->GetSID()+" METADATA * "+extname+" :"+extdata);
 }
@@ -34,9 +54,9 @@ void SpanningTreeSyncTarget::SendEncap(const std::string& cmd, const parameterli
 	ts.WriteLine(line);
 }
 
-void SpanningTreeSyncTarget::SendCommand(const std::string &line)
+void SpanningTreeSyncTarget::SendEncap(const std::string &line)
 {
-	ts.WriteLine(":" + ServerInstance->Config->GetSID() + " " + line);
+	ts.WriteLine(":" + ServerInstance->Config->GetSID() + " ENCAP * " + line);
 }
 
 void SpanningTreeProtocolInterface::GetServerList(ProtoServerList &sl)
@@ -74,7 +94,10 @@ void SpanningTreeProtocolInterface::SendMetaData(Extensible* target, const std::
 	if (u)
 		params.push_back(u->uuid);
 	else if (c)
+	{
 		params.push_back(c->name);
+		params.push_back(ConvToStr(c->age));
+	}
 	else
 		params.push_back("*");
 
@@ -89,6 +112,7 @@ void SpanningTreeProtocolInterface::SendTopic(Channel* channel, std::string &top
 	parameterlist params;
 
 	params.push_back(channel->name);
+	params.push_back(ConvToStr(channel->age));
 	params.push_back(ConvToStr(ServerInstance->Time()));
 	params.push_back(ServerInstance->Config->ServerName);
 	params.push_back(":" + topic);

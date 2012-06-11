@@ -1,4 +1,24 @@
 #!/usr/bin/env perl
+
+#
+# InspIRCd -- Internet Relay Chat Daemon
+#
+#   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
+#
+# This file is part of InspIRCd.  InspIRCd is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+
 use strict;
 use warnings;
 use POSIX qw(getcwd);
@@ -55,7 +75,7 @@ all: inspircd commands modules
 
 END
 	my(@core_deps, @cmdlist, @modlist);
-	for my $file (<*.cpp>, <modes/*.cpp>, <socketengines/*.cpp>, "threadengines/threadengine_pthread.cpp") {
+	for my $file (<*.cpp>, <modes/*.cpp>, <socketengines/*.cpp>) {
 		my $out = find_output $file;
 		dep_cpp $file, $out, 'gen-o';
 		next if $file =~ m#^socketengines/# && $file ne "socketengines/$ENV{SOCKETENGINE}.cpp";
@@ -122,7 +142,7 @@ all: inspircd
 END
 	my(@deps, @srcs);
 	for my $file (<*.cpp>, <modes/*.cpp>, <socketengines/*.cpp>, <commands/*.cpp>,
-			<modules/*.cpp>, <modules/m_*/*.cpp>, "threadengines/threadengine_pthread.cpp") {
+			<modules/*.cpp>, <modules/m_*/*.cpp>) {
 		my $out = find_output $file, 1;
 		if ($out =~ m#obj/([^/]+)/[^/]+.o$#) {
 			mkdir "$ENV{BUILDPATH}/obj/$1";

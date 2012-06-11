@@ -1,15 +1,21 @@
-/*       +------------------------------------+
- *       | Inspire Internet Relay Chat Daemon |
- *       +------------------------------------+
+/*
+ * InspIRCd -- Internet Relay Chat Daemon
  *
- *  InspIRCd: (C) 2002-2011 InspIRCd Development Team
- * See: http://wiki.inspircd.org/Credits
+ *   Copyright (C) 2009-2010 Daniel De Graaf <danieldg@inspircd.org>
  *
- * This program is free but copyrighted software; see
- *            the file COPYING for details.
+ * This file is part of InspIRCd.  InspIRCd is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, version 2.
  *
- * ---------------------------------------------------
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "inspircd.h"
 #include "command_parse.h"
@@ -200,6 +206,46 @@ void TreeSocket::WriteLine(std::string line)
 					line.erase(a, c-a);
 				}
 			}
+		}
+		else if (proto_version < 1204 && command == "METADATA")
+		{
+			// Drop TS for channel METADATA
+			// :sid METADATA #target TS extname ...
+			//     A        B       C  D
+			if (b == std::string::npos)
+				return;
+			std::string::size_type c = line.find(' ', b + 1);
+			if (c == std::string::npos)
+				return;
+
+			if (line[b + 1] == '#')
+			{
+				// We're sending a channel metadata indeed
+				std::string::size_type d = line.find(' ', c + 1);
+				if (d == std::string::npos)
+					return;
+
+				ServerInstance->Logs->Log("m_spanningtree", DEBUG, "Stripping channel TS in METADATA for pre-1204-protocol server");
+				line.erase(c, d-c);
+			}
+		}
+		else if (proto_version < 1204 && command == "FTOPIC")
+		{
+			// Drop channel TS for FTOPIC
+			// :sid FTOPIC #target TS TopicTS ...
+			//     A      B       C  D
+			if (b == std::string::npos)
+				return;
+			std::string::size_type c = line.find(' ', b + 1);
+			if (c == std::string::npos)
+				return;
+
+			std::string::size_type d = line.find(' ', c + 1);
+			if (d == std::string::npos)
+				return;
+
+			ServerInstance->Logs->Log("m_spanningtree", DEBUG, "Stripping channel TS in FTOPIC for pre-1204-protocol server");
+			line.erase(c, d-c);
 		}
 	}
 
