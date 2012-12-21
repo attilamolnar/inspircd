@@ -82,6 +82,8 @@ CmdResult CommandUser::HandleLocal(const std::vector<std::string>& parameters, L
 		if (MOD_RESULT == MOD_RES_DENY)
 			return CMD_FAILURE;
 
+		if (ServerInstance->IsUserReady(user))
+			user->FullConnect();
 	}
 
 	return CMD_SUCCESS;

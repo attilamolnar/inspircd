@@ -128,6 +128,9 @@ void UserResolver::OnLookupComplete(const std::string &result, unsigned int ttl,
 
 		// Save some memory by freeing this up; it's never used again in the user's lifetime.
 		bound_user->stored_host.resize(0);
+
+		if (bound_user->registered == REG_NICKUSER && !bound_user->quitting && ServerInstance->IsUserReady(bound_user))
+			bound_user->FullConnect();
 	}
 }
 
@@ -140,5 +143,8 @@ void UserResolver::OnError(ResolverError e, const std::string &errormessage)
 		bound_user->dns_done = true;
 		bound_user->stored_host.resize(0);
 		ServerInstance->stats->statsDnsBad++;
+
+		if (bound_user->registered == REG_NICKUSER && !bound_user->quitting && ServerInstance->IsUserReady(bound_user))
+			bound_user->FullConnect();
 	}
 }

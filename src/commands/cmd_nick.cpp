@@ -86,6 +86,10 @@ CmdResult CommandNick::Handle (const std::vector<std::string>& parameters, User 
 			if (MOD_RESULT == MOD_RES_DENY)
 				return CMD_FAILURE;
 
+			LocalUser* localuser = IS_LOCAL(user);
+			if ((localuser) && (ServerInstance->IsUserReady(localuser)))
+				localuser->FullConnect();
+
 			// return early to not penalize new users
 			return CMD_SUCCESS;
 		}

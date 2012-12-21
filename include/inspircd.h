@@ -870,6 +870,11 @@ class CoreExport InspIRCd
 		return this->ReadBuffer;
 	}
 
+	inline bool IsUserReady(LocalUser* user)
+	{
+		return ((user->dns_done && AllModulesReportReady(user)));
+	}
+
 	friend class TestSuite;
 };
 
