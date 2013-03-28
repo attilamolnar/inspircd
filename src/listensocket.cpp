@@ -93,6 +93,7 @@ void ListenSocket::AcceptInternal()
 	ServerInstance->Logs->Log("SOCKET",DEBUG,"HandleEvent for Listensocket %s nfd=%d", bind_desc.c_str(), incomingSockfd);
 	if (incomingSockfd < 0)
 	{
+		ServerInstance->SNO->WriteToSnoMask('d', "Cannot accept new connection, out of fds?");
 		ServerInstance->stats->statsRefused++;
 		return;
 	}
