@@ -53,6 +53,10 @@ void FloodQuitUserHandler::Call(User* current)
  */
 void InspIRCd::DoBackgroundUserStuff()
 {
+	static time_t last_run = 0;
+	SNO->WriteToSnoMask('d', "DoBackgroundUserStuff() %lu (%lu)", (unsigned long) Time(), (unsigned long) Time() - last_run);
+	last_run = Time();
+
 	/*
 	 * loop over all local users..
 	 */
