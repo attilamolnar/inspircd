@@ -607,7 +607,7 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 		std::cout << std::endl << "Hint: Try using a public IP instead of blank or *" << std::endl;
 	}
 
-	std::cout << "InspIRCd is now running as '" << Config->ServerName << "'[" << Config->GetSID() << "] with " << SE->GetMaxFds() << " max open sockets" << std::endl;
+	std::cout << "InspIRCd is now running as '" << Config->ServerName << "'[" << Config->GetSID() << "] with " << SE->GetMaxFds() << " max open sockets, " << Config->MaxConn << " somaxconn" << std::endl;
 
 #ifndef _WIN32
 	if (!Config->cmdline.nofork)
@@ -662,7 +662,7 @@ InspIRCd::InspIRCd(int argc, char** argv) :
 	QueryPerformanceFrequency(&stats->QPFrequency);
 #endif
 
-	Logs->Log("STARTUP", DEFAULT, "Startup complete as '%s'[%s], %d max open sockets", Config->ServerName.c_str(),Config->GetSID().c_str(), SE->GetMaxFds());
+	Logs->Log("STARTUP", DEFAULT, "Startup complete as '%s'[%s], %d max open sockets, %d somaxconn", Config->ServerName.c_str(),Config->GetSID().c_str(), SE->GetMaxFds(), Config->MaxConn);
 
 #ifndef _WIN32
 	std::string SetUser = Config->ConfValue("security")->getString("runasuser");
