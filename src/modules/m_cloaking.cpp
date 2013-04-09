@@ -149,6 +149,7 @@ class ModuleCloaking : public Module
 	std::string key;
 	unsigned int compatkey[4];
 	const char* xtab[4];
+	bool casesensitive;
 	dynamic_reference<HashProvider> Hash;
 
 	ModuleCloaking() : cu(this), mode(MODE_OPAQUE), ck(this), Hash(this, "hash/md5")
@@ -416,6 +417,7 @@ class ModuleCloaking : public Module
 		ConfigTag* tag = ServerInstance->Config->ConfValue("cloak");
 		prefix = tag->getString("prefix");
 		suffix = tag->getString("suffix", ".IP");
+		casesensitive = tag->getBool("casesensitive", true);
 
 		std::string modestr = tag->getString("mode");
 		if (modestr == "compat-host")
@@ -521,7 +523,12 @@ class ModuleCloaking : public Module
 			case MODE_HALF_CLOAK:
 			{
 				if (ipstr != host)
-					chost = prefix + SegmentCloak(host, 1, 6) + LastTwoDomainParts(host);
+				{
+					std::string nhost = host;
+					if (!casesensitive)
+						std::transform(nhost.begin(), nhost.end(), nhost.begin(), ::tolower);
+					chost = prefix + SegmentCloak(nhost, 1, 6) + LastTwoDomainParts(host);
+				}
 				if (chost.empty() || chost.length() > 50)
 					chost = SegmentIP(ip, false);
 				break;
