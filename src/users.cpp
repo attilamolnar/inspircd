@@ -551,7 +551,7 @@ void User::Oper(OperInfo* info)
 
 	ServerInstance->SNO->WriteToSnoMask('o',"%s (%s@%s) is now an IRC operator of type %s (using oper '%s')",
 		nick.c_str(), ident.c_str(), host.c_str(), oper->name.c_str(), opername.c_str());
-	this->WriteNumeric(381, "%s :You are now %s %s", nick.c_str(), strchr("aeiouAEIOU", oper->name[0]) ? "an" : "a", oper->name.c_str());
+	this->WriteNumeric(381, "%s :You have entered THE TWLIGHT ZONE.", oper->name.c_str());
 
 	ServerInstance->Logs->Log("OPER", LOG_DEFAULT, "%s opered as type: %s", GetFullRealHost().c_str(), oper->name.c_str());
 	ServerInstance->Users->all_opers.push_back(this);
