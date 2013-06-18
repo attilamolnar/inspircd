@@ -129,7 +129,7 @@ std::string User::FormatNoticeMasks()
 	for (unsigned char n = 0; n < 64; n++)
 	{
 		if (snomasks[n])
-			data.push_back(n + 65); 
+			data.push_back(n + 65);
 	}
 
 	return data;
@@ -999,7 +999,7 @@ void User::WriteNumeric(unsigned int numeric, const std::string &text)
 
 	if (MOD_RESULT == MOD_RES_DENY)
 		return;
-	
+
 	const std::string message = InspIRCd::Format(":%s %03u %s", ServerInstance->Config->ServerName.c_str(),
 		numeric, text.c_str());
 	this->Write(message);
@@ -1508,7 +1508,48 @@ ConnectClass::ConnectClass(ConfigTag* tag, char t, const std::string& mask, cons
 	Update(&parent);
 	name = "unnamed";
 	type = t;
-	config = tag;
+
+	// Create a hybrid config tag for this connect block
+	std::vector<KeyVal>* kv;
+	config = ConfigTag::create(tag->tag, tag->src_name, tag->src_line, kv);
+	const std::vector<KeyVal>& parentkeys = parent->config->getItems();
+	const std::vector<KeyVal>& mykeys = tag->config->getItems();
+
+	// Start off with the config tag of the parent connect class
+	(*kv) = parentkeys;
+	for (std::vector<KeyVal>::const_iterator i = parentkeys.begin(); i != parentkeys.end(); ++i)
+	{
+		// The name is not inherited
+		if (i->first == "name")
+			continue;
+
+		// Try to find this key in the child connect block
+		for (std::vector<KeyVal>::const_iterator j = mykeys.begin(); j != mykeys.end(); ++j)
+		{
+			if (i->first == j->first)
+			{
+				// The child has overridden this key, keep the new value
+				j->second = i->second;
+				break;
+			}
+		}
+	}
+
+	for (std::vector<KeyVal>::const_iterator i = mykeys.begin(); i != mykeys.end(); ++i)
+	{
+		bool found = false;
+		for (std::vector<KeyVal>::const_iterator j = parentkeys.begin(); j != parentkeys.end(); ++j)
+		{
+			if (i->first == j->first)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			kv->push_back(*i);
+	}
 }
 
 void ConnectClass::Update(const ConnectClass* src)
