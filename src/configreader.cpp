@@ -30,18 +30,8 @@
 #include <iostream>
 
 ServerConfig::ServerConfig()
+	: RawLog(false)
 {
-	RawLog = HideBans = HideSplits = UndernetMsgPrefix = false;
-	WildcardIPv6 = CycleHosts = InvBypassModes = true;
-	dns_timeout = 5;
-	MaxTargets = 20;
-	NetBufferSize = 10240;
-	SoftLimit = ServerInstance->SE->GetMaxFds();
-	MaxConn = SOMAXCONN;
-	MaxChans = 20;
-	OperMaxChans = 30;
-	c_ipv4_range = 32;
-	c_ipv6_range = 128;
 }
 
 template<typename T, typename V>
