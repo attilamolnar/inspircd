@@ -1,0 +1,27 @@
+language: cpp
+
+compiler:
+  - gcc
+
+before_script:
+  - ./configure --disable-interactive --enable-gnutls --enable-openssl
+
+script:
+  - make -j2
+
+notifications:
+  email: false
+
+env:
+  global:
+  - secure: "VT5wK3iYAyYnzv1l1Gvy4OHJNILCpSZkAuQVWR/s41JW0pStFZ5zzfMubiLs9d9yGRVz5k/ukFlWJwuSoj30IImIz0yZgO6XjqLAqWnvklbCPos89PiOOE0Vf3UHNoCs95q4eA1bxNxrrSRuDjTMRwOBBFV1r3Jn5tvkZ74bIoE="
+
+addons:
+  coverity_scan:
+    project:
+      name: "attilamolnar/inspircd"
+      description: "InspIRCd"
+    notification_email: attilamolnar@hush.com
+    build_command_prepend: "./configure --disable-interactive --enable-gnutls --enable-openssl"
+    build_command: "make -j2"
+    branch_pattern: coverity
