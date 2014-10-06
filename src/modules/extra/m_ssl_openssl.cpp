@@ -458,11 +458,17 @@ class ModuleSSLOpenSSL : public Module
 					ServerInstance->SE->ChangeEventMask(user, FD_WANT_NO_READ | FD_WANT_SINGLE_WRITE);
 					return 0;
 				}
-				else
+				else if (err == SSL_ERROR_SYSCALL)
 				{
-					CloseSession(session);
-					return -1;
+					if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+					{
+						ServerInstance->SE->ChangeEventMask(user, FD_WANT_POLL_READ);
+						return 0;
+					}
 				}
+
+				CloseSession(session);
+				return -1;
 			}
 		}
 
@@ -528,11 +534,17 @@ class ModuleSSLOpenSSL : public Module
 					ServerInstance->SE->ChangeEventMask(user, FD_WANT_POLL_READ);
 					return 0;
 				}
-				else
+				else if (err == SSL_ERROR_SYSCALL)
 				{
-					CloseSession(session);
-					return -1;
+					if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+					{
+						ServerInstance->SE->ChangeEventMask(user, FD_WANT_SINGLE_WRITE);
+						return 0;
+					}
 				}
+
+				CloseSession(session);
+				return -1;
 			}
 		}
 		return 0;
