@@ -547,7 +547,7 @@ class ModuleSSLOpenSSL : public Module
 		else
 			ret = SSL_accept(session->sess);
 
-		if (ret < 0)
+		if (ret <= 0)
 		{
 			int err = SSL_get_error(session->sess, ret);
 
@@ -581,13 +581,6 @@ class ModuleSSLOpenSSL : public Module
 
 			return true;
 		}
-		else if (ret == 0)
-		{
-			CloseSession(session);
-			return true;
-		}
-
-		return true;
 	}
 
 	void CloseSession(issl_session* session)
