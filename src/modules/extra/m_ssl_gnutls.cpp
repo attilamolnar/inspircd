@@ -22,21 +22,16 @@
 
 
 #include "inspircd.h"
+#ifndef _WIN32
 #include <gcrypt.h>
+#endif
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
 #include "ssl.h"
 #include "m_cap.h"
 
 #ifdef _WIN32
-# pragma comment(lib, "libgnutls.lib")
-# pragma comment(lib, "libgcrypt.lib")
-# pragma comment(lib, "libgpg-error.lib")
-# pragma comment(lib, "user32.lib")
-# pragma comment(lib, "advapi32.lib")
-# pragma comment(lib, "libgcc.lib")
-# pragma comment(lib, "libmingwex.lib")
-# pragma comment(lib, "gdi32.lib")
+# pragma comment(lib, "libgnutls-28.lib")
 #endif
 
 /* $ModDesc: Provides SSL support for clients */
@@ -58,6 +53,13 @@
 #if(GNUTLS_VERSION_MAJOR < 2)
 typedef gnutls_certificate_credentials_t gnutls_certificate_credentials;
 typedef gnutls_dh_params_t gnutls_dh_params;
+#endif
+
+#if (defined(_WIN32) && (GNUTLS_VERSION_MAJOR > 2 || (GNUTLS_VERSION_MAJOR == 2 && GNUTLS_VERSION_MINOR >= 12)))
+# define GNUTLS_HAS_RND
+# include <gnutls/crypto.h>
+#else
+# include <gcrypt.h>
 #endif
 
 enum issl_status { ISSL_NONE, ISSL_HANDSHAKING_READ, ISSL_HANDSHAKING_WRITE, ISSL_HANDSHAKEN, ISSL_CLOSING, ISSL_CLOSED };
@@ -89,7 +91,11 @@ class RandGen : public HandlerBase2<void, char*, size_t>
 	RandGen() {}
 	void Call(char* buffer, size_t len)
 	{
+#ifdef GNUTLS_HAS_RND
+		gnutls_rnd(GNUTLS_RND_RANDOM, buffer, len);
+#else
 		gcry_randomize(buffer, len, GCRY_STRONG_RANDOM);
+#endif
 	}
 };
 
@@ -250,7 +256,9 @@ class ModuleSSLGnuTLS : public Module
 	ModuleSSLGnuTLS()
 		: starttls(this), capHandler(this, "tls"), iohook(this, "ssl/gnutls", SERVICE_IOHOOK)
 	{
+#ifndef GNUTLS_HAS_RND
 		gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
+#endif
 
 		sessions = new issl_session[ServerInstance->SE->GetMaxFds()];
 
@@ -273,8 +281,6 @@ class ModuleSSLGnuTLS : public Module
 
 		ServerInstance->GenRandom = &randhandler;
 
-		// Void return, guess we assume success
-		gnutls_certificate_set_dh_params(x509_cred, dh_params);
 		Implementation eventlist[] = { I_On005Numeric, I_OnRehash, I_OnModuleRehash, I_OnUserConnect,
 			I_OnEvent, I_OnHookIO };
 		ServerInstance->Modules->Attach(eventlist, this, sizeof(eventlist)/sizeof(Implementation));
@@ -479,6 +485,8 @@ class ModuleSSLGnuTLS : public Module
 		{
 			GenerateDHParams();
 		}
+
+		gnutls_certificate_set_dh_params(x509_cred, dh_params);
 	}
 
 	void GenerateDHParams()
@@ -872,11 +880,23 @@ class ModuleSSLGnuTLS : public Module
 			goto info_done_dealloc;
 		}
 
-		gnutls_x509_crt_get_dn(cert, name, &name_size);
-		certinfo->dn = name;
+		if (gnutls_x509_crt_get_dn(cert, name, &name_size) == 0)
+		{
+			std::string& dn = certinfo->dn;
+			dn = name;
+			// Make sure there are no chars in the string that we consider invalid
+			if (dn.find_first_of("\r\n") != std::string::npos)
+				dn.clear();
+		}
 
-		gnutls_x509_crt_get_issuer_dn(cert, name, &name_size);
-		certinfo->issuer = name;
+		name_size = sizeof(name);
+		if (gnutls_x509_crt_get_issuer_dn(cert, name, &name_size) == 0)
+		{
+			std::string& issuer = certinfo->issuer;
+			issuer = name;
+			if (issuer.find_first_of("\r\n") != std::string::npos)
+				issuer.clear();
+		}
 
 		if ((ret = gnutls_x509_crt_get_fingerprint(cert, hash, digest, &digest_size)) < 0)
 		{

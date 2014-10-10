@@ -76,6 +76,7 @@ sub promptstring($$$$$)
 sub make_rpath($;$)
 {
 	my ($executable, $module) = @_;
+	return "" if defined $ENV{DISABLE_RPATH};
 	chomp(my $data = `$executable`);
 	my $output = "";
 	while ($data =~ /-L(\S+)/)
@@ -83,10 +84,10 @@ sub make_rpath($;$)
 		my $libpath = $1;
 		if (!exists $already_added{$libpath})
 		{
-			print "Adding extra library path to \e[1;32m$module\e[0m ... \e[1;32m$libpath\e[0m\n";
+			print "Adding runtime library path to \e[1;32m$module\e[0m ... \e[1;32m$libpath\e[0m\n";
 			$already_added{$libpath} = 1;
 		}
-		$output .= "-Wl,-rpath -Wl,$libpath -L$libpath " unless defined $main::opt_disablerpath;
+		$output .= "-Wl,-rpath -Wl,$libpath -L$libpath ";
 		$data =~ s/-L(\S+)//;
 	}
 	return $output;
@@ -94,6 +95,7 @@ sub make_rpath($;$)
 
 sub extend_pkg_path()
 {
+	return if defined $ENV{DISABLE_EXTEND_PKG_PATH};
 	if (!exists $ENV{PKG_CONFIG_PATH})
 	{
 		$ENV{PKG_CONFIG_PATH} = "/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig:/usr/X11R6/libdata/pkgconfig";
@@ -400,6 +402,7 @@ sub translate_functions($$)
 			close TF;
 			my $replace = `perl $tmpfile`;
 			chomp($replace);
+			unlink($tmpfile);
 			$line =~ s/eval\("(.+?)"\)/$replace/;
 		}
 		while ($line =~ /pkgconflibs\("(.+?)","(.+?)","(.+?)"\)/)
@@ -445,7 +448,7 @@ sub translate_functions($$)
 		print "\nMake sure you have pkg-config installed\n";
 		print "\nIn the case of gnutls configuration errors on debian,\n";
 		print "Ubuntu, etc, you should ensure that you have installed\n";
-		print "gnutls-bin as well as gnutls-dev and gnutls.\n";
+		print "gnutls-bin as well as libgnutls-dev and libgnutls.\n";
 		exit;
 	}
 	else
