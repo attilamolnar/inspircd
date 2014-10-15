@@ -594,7 +594,12 @@ class ModuleSSLGnuTLS : public Module
 		gnutls_transport_set_pull_function(session->sess, gnutls_pull_wrapper);
 
 		if (me_server)
+		{
 			gnutls_certificate_server_set_request(session->sess, GNUTLS_CERT_REQUEST); // Request client certificate if any.
+			session->status = ISSL_HANDSHAKING_READ;
+			ServerInstance->SE->ChangeEventMask(user, FD_WANT_POLL_READ);
+			return;
+		}
 
 		Handshake(session, user);
 	}
