@@ -251,6 +251,17 @@ class ModuleSSLGnuTLS : public Module
 		return rv;
 	}
 
+	void CloseHandshaking()
+	{
+		size_t max = ServerInstance->SE->GetMaxFds();
+		for (size_t i = 0; i < max; i++)
+		{
+			issl_session& curr = sessions[i];
+			if ((curr.sess) && (curr.status != ISSL_HANDSHAKEN))
+				CloseSession(&curr);
+		}
+	}
+
  public:
 
 	ModuleSSLGnuTLS()
@@ -333,6 +344,8 @@ class ModuleSSLGnuTLS : public Module
 	{
 		if(param != "ssl")
 			return;
+
+		CloseHandshaking();
 
 		std::string keyfile;
 		std::string certfile;
