@@ -75,6 +75,8 @@ public:
 	bool data_to_write;
 
 	issl_session()
+		: sess(NULL)
+		, status(ISSL_NONE)
 	{
 		outbound = false;
 		data_to_write = false;
@@ -102,10 +104,43 @@ class ModuleSSLOpenSSL : public Module
 	SSL_CTX* ctx;
 	SSL_CTX* clictx;
 
+	long ctx_options;
+	long clictx_options;
+
 	std::string sslports;
 	bool use_sha;
 
 	ServiceProvider iohook;
+
+	static void SetContextOptions(SSL_CTX* ctx, long defoptions, const std::string& ctxname, ConfigTag* tag)
+	{
+		long setoptions = tag->getInt(ctxname + "setoptions");
+		// User-friendly config options for setting context options
+#ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
+		if (tag->getBool("cipherserverpref"))
+			setoptions |= SSL_OP_CIPHER_SERVER_PREFERENCE;
+#endif
+#ifdef SSL_OP_NO_COMPRESSION
+		if (!tag->getBool("compression", true))
+			setoptions |= SSL_OP_NO_COMPRESSION;
+#endif
+		if (!tag->getBool("sslv3", true))
+			setoptions |= SSL_OP_NO_SSLv3;
+		if (!tag->getBool("tlsv1", true))
+			setoptions |= SSL_OP_NO_TLSv1;
+
+		long clearoptions = tag->getInt(ctxname + "clearoptions");
+		ServerInstance->Logs->Log("m_ssl_openssl", DEBUG, "Setting OpenSSL %s context options, default: %ld set: %ld clear: %ld", ctxname.c_str(), defoptions, setoptions, clearoptions);
+
+		// Clear everything
+		SSL_CTX_clear_options(ctx, SSL_CTX_get_options(ctx));
+
+		// Set the default options and what is in the conf
+		SSL_CTX_set_options(ctx, defoptions | setoptions);
+		long final = SSL_CTX_clear_options(ctx, clearoptions);
+		ServerInstance->Logs->Log("m_ssl_openssl", DEFAULT, "OpenSSL %s context options: %ld", ctxname.c_str(), final);
+	}
+
  public:
 
 	ModuleSSLOpenSSL() : iohook(this, "ssl/openssl", SERVICE_IOHOOK)
@@ -128,8 +163,20 @@ class ModuleSSLOpenSSL : public Module
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, OnVerify);
 		SSL_CTX_set_verify(clictx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, OnVerify);
 
-		const unsigned char session_id[] = "inspircd";
-		SSL_CTX_set_session_id_context(ctx, session_id, sizeof(session_id) - 1);
+		SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_OFF);
+		SSL_CTX_set_session_cache_mode(clictx, SSL_SESS_CACHE_OFF);
+
+		long opts = SSL_OP_NO_SSLv2 | SSL_OP_SINGLE_DH_USE;
+		// Only turn options on if they exist
+#ifdef SSL_OP_SINGLE_ECDH_USE
+		opts |= SSL_OP_SINGLE_ECDH_USE;
+#endif
+#ifdef SSL_OP_NO_TICKET
+		opts |= SSL_OP_NO_TICKET;
+#endif
+
+		ctx_options = SSL_CTX_set_options(ctx, opts);
+		clictx_options = SSL_CTX_set_options(clictx, opts);
 	}
 
 	void init()
@@ -210,6 +257,12 @@ class ModuleSSLOpenSSL : public Module
 		if (hash != "sha1" && hash != "md5")
 			throw ModuleException("Unknown hash type " + hash);
 		use_sha = (hash == "sha1");
+
+		if (conf->getBool("customcontextoptions"))
+		{
+			SetContextOptions(ctx, ctx_options, "server", conf);
+			SetContextOptions(clictx, clictx_options, "client", conf);
+		}
 
 		std::string ciphers = conf->getString("ciphers", "");
 
@@ -341,6 +394,12 @@ class ModuleSSLOpenSSL : public Module
 
 			req.cert = session->cert;
 		}
+		else if (!strcmp("GET_RAW_SSL_SESSION", request.id))
+		{
+			SSLRawSessionRequest& req = static_cast<SSLRawSessionRequest&>(request);
+			if ((req.fd >= 0) && (req.fd < ServerInstance->SE->GetMaxFds()))
+				req.data = reinterpret_cast<void*>(sessions[req.fd].sess);
+		}
 	}
 
 	void OnStreamSocketAccept(StreamSocket* user, irc::sockets::sockaddrs* client, irc::sockets::sockaddrs* server)
@@ -352,7 +411,7 @@ class ModuleSSLOpenSSL : public Module
 		session->sess = SSL_new(ctx);
 		session->status = ISSL_NONE;
 		session->outbound = false;
-		session->cert = NULL;
+		session->data_to_write = false;
 
 		if (session->sess == NULL)
 			return;
@@ -378,6 +437,7 @@ class ModuleSSLOpenSSL : public Module
 		session->sess = SSL_new(clictx);
 		session->status = ISSL_NONE;
 		session->outbound = true;
+		session->data_to_write = false;
 
 		if (session->sess == NULL)
 			return;
@@ -593,7 +653,7 @@ class ModuleSSLOpenSSL : public Module
 		else if (ret == 0)
 		{
 			CloseSession(session);
-			return true;
+			return false;
 		}
 
 		return true;
@@ -609,7 +669,7 @@ class ModuleSSLOpenSSL : public Module
 
 		session->sess = NULL;
 		session->status = ISSL_NONE;
-		errno = EIO;
+		session->cert = NULL;
 	}
 
 	void VerifyCertificate(issl_session* session, StreamSocket* user)
