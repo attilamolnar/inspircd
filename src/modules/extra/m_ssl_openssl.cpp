@@ -51,9 +51,15 @@
 /* $NoPedantic */
 
 
+class ModuleSSLOpenSSL;
+
 enum issl_status { ISSL_NONE, ISSL_HANDSHAKING, ISSL_OPEN };
 
 static bool SelfSigned = false;
+
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+static ModuleSSLOpenSSL* opensslmod = NULL;
+#endif
 
 char* get_error()
 {
@@ -141,10 +147,72 @@ class ModuleSSLOpenSSL : public Module
 		ServerInstance->Logs->Log("m_ssl_openssl", DEFAULT, "OpenSSL %s context options: %ld", ctxname.c_str(), final);
 	}
 
+#ifdef INSPIRCD_OPENSSL_ENABLE_ECDH
+	void SetupECDH(ConfigTag* tag)
+	{
+		std::string curvename = tag->getString("ecdhcurve", "prime256v1");
+		if (curvename.empty())
+			return;
+
+		int nid = OBJ_sn2nid(curvename.c_str());
+		if (nid == 0)
+		{
+			ServerInstance->Logs->Log("m_ssl_openssl", DEFAULT, "m_ssl_openssl.so: Unknown curve: \"%s\"", curvename.c_str());
+			return;
+		}
+
+		EC_KEY* eckey = EC_KEY_new_by_curve_name(nid);
+		if (!eckey)
+		{
+			ServerInstance->Logs->Log("m_ssl_openssl", DEFAULT, "m_ssl_openssl.so: Unable to create EC key object");
+			return;
+		}
+
+		ERR_clear_error();
+		if (SSL_CTX_set_tmp_ecdh(ctx, eckey) < 0)
+		{
+			ServerInstance->Logs->Log("m_ssl_openssl", DEFAULT, "m_ssl_openssl.so: Couldn't set ECDH parameters");
+			ERR_print_errors_cb(error_callback, this);
+		}
+
+		EC_KEY_free(eckey);
+	}
+#endif
+
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+	static void SSLInfoCallback(const SSL* ssl, int where, int rc)
+	{
+		int fd = SSL_get_fd(const_cast<SSL*>(ssl));
+		issl_session& session = opensslmod->sessions[fd];
+
+		if ((where & SSL_CB_HANDSHAKE_START) && (session.status == ISSL_OPEN))
+		{
+			// The other side is trying to renegotiate, kill the connection and change status
+			// to ISSL_NONE so CheckRenego() closes the session
+			session.status = ISSL_NONE;
+			ServerInstance->SE->Shutdown(fd, 2);
+		}
+	}
+
+	bool CheckRenego(StreamSocket* sock, issl_session* session)
+	{
+		if (session->status != ISSL_NONE)
+			return true;
+
+		ServerInstance->Logs->Log("m_ssl_openssl", DEBUG, "Session %p killed, attempted to renegotiate", (void*)session->sess);
+		CloseSession(session);
+		sock->SetError("Renegotiation is not allowed");
+		return false;
+	}
+#endif
+
  public:
 
 	ModuleSSLOpenSSL() : iohook(this, "ssl/openssl", SERVICE_IOHOOK)
 	{
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+		opensslmod = this;
+#endif
 		sessions = new issl_session[ServerInstance->SE->GetMaxFds()];
 
 		/* Global SSL library initialization*/
@@ -202,6 +270,20 @@ class ModuleSSLOpenSSL : public Module
 		sslports.clear();
 
 		ConfigTag* Conf = ServerInstance->Config->ConfValue("openssl");
+
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+		// Set the callback if we are not allowing renegotiations, unset it if we do
+		if (Conf->getBool("renegotiation", true))
+		{
+			SSL_CTX_set_info_callback(ctx, NULL);
+			SSL_CTX_set_info_callback(clictx, NULL);
+		}
+		else
+		{
+			SSL_CTX_set_info_callback(ctx, SSLInfoCallback);
+			SSL_CTX_set_info_callback(clictx, SSLInfoCallback);
+		}
+#endif
 
 		if (Conf->getBool("showports", true))
 		{
@@ -333,6 +415,10 @@ class ModuleSSLOpenSSL : public Module
 
 #ifndef _WIN32
 		fclose(dhpfile);
+#endif
+
+#ifdef INSPIRCD_OPENSSL_ENABLE_ECDH
+		SetupECDH(conf);
 #endif
 	}
 
@@ -497,6 +583,11 @@ class ModuleSSLOpenSSL : public Module
 			size_t bufsiz = ServerInstance->Config->NetBufferSize;
 			int ret = SSL_read(session->sess, buffer, bufsiz);
 
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+			if (!CheckRenego(user, session))
+				return -1;
+#endif
+
 			if (ret > 0)
 			{
 				recvq.append(buffer, ret);
@@ -565,6 +656,12 @@ class ModuleSSLOpenSSL : public Module
 		{
 			ERR_clear_error();
 			int ret = SSL_write(session->sess, buffer.data(), buffer.size());
+
+#ifdef INSPIRCD_OPENSSL_ENABLE_RENEGO_DETECTION
+			if (!CheckRenego(user, session))
+				return -1;
+#endif
+
 			if (ret == (int)buffer.length())
 			{
 				session->data_to_write = false;
@@ -653,10 +750,8 @@ class ModuleSSLOpenSSL : public Module
 		else if (ret == 0)
 		{
 			CloseSession(session);
-			return false;
 		}
-
-		return true;
+		return false;
 	}
 
 	void CloseSession(issl_session* session)
