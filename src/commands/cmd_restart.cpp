@@ -59,6 +59,9 @@ CmdResult CommandRestart::Handle (const std::vector<std::string>& parameters, Us
 			if (flags != -1)
 				fcntl(i, F_SETFD, flags | FD_CLOEXEC);
 		}
+#else
+		for (unsigned int i = 0; i < FD_SETSIZE; i++)
+			closesocket(i);
 #endif
 
 		execv(ServerInstance->Config->cmdline.argv[0], ServerInstance->Config->cmdline.argv);
