@@ -208,16 +208,7 @@ void CommandWhois::DoWhois(LocalUser* user, User* dest, unsigned long signon, un
 	}
 
 	if (whois.IsSelfWhois() || user->HasPrivPermission("users/auspex"))
-	{
-		if (dest->IsModeSet(snomaskmode))
-		{
-			whois.SendLine(379, InspIRCd::Format("is using modes +%s %s", dest->FormatModes(), snomaskmode->GetUserParameter(dest).c_str()));
-		}
-		else
-		{
-			whois.SendLine(379, InspIRCd::Format("is using modes +%s", dest->FormatModes()));
-		}
-	}
+		whois.SendLine(379, InspIRCd::Format("is using modes +%s", dest->FormatModes(true)));
 
 	FOREACH_MOD_CUSTOM(evprov, Whois::EventListener, OnWhois, (whois));
 
