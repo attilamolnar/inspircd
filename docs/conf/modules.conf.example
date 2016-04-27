@@ -1006,6 +1006,19 @@
 #<module name="ircv3_invitenotify">
 
 #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+# IRCv3 metadata module: Provides the metadata IRCv3.2 facility.
+# The /METADATA command can be used by clients to manipulate arbitrary
+# key-value pairs associated with users and channels.
+# The metadata-notify extension is also provided which can be enabled
+# by clients to subscribe to metadata change notifications.
+#<module name="ircv3_metadata">
+# Settings:
+# max: Maximum number of entries per user or channel.
+# maxkeylength: Maximum length of metadata keys.
+# maxvaluelength: Maximum length of metadata values.
+#<metadata max="30" maxkeylength="32" maxvaluelength="100">
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 # Join flood module: Adds support for join flood protection +j X:Y.
 # Closes the channel for 60 seconds if X users join in Y seconds.
 #<module name="joinflood">
