@@ -109,7 +109,7 @@ class FlagExtItem : public ExtensionItem
 		unset_raw(container);
 	}
 
-	void free(void* item)
+	void free(Extensible* container, void* item)
 	{
 		// nothing to free
 	}

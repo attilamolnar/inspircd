@@ -69,7 +69,7 @@ class SSLCertExt : public ExtensionItem {
 		}
 	}
 
-	void free(void* item)
+	void free(Extensible* container, void* item)
 	{
 		ssl_cert* old = static_cast<ssl_cert*>(item);
 		if (old && old->refcount_dec())

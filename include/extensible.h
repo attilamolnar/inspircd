@@ -65,7 +65,7 @@ class CoreExport ExtensionItem : public ServiceProvider, public usecountbase
 	 */
 	virtual void unserialize(SerializeFormat format, Extensible* container, const std::string& value) = 0;
 	/** Free the item */
-	virtual void free(void* item) = 0;
+	virtual void free(Extensible* container, void* item) = 0;
 
 	/** Register this object in the ExtensionManager
 	 */
@@ -147,7 +147,7 @@ class CoreExport LocalExtItem : public ExtensionItem
 	virtual ~LocalExtItem();
 	virtual std::string serialize(SerializeFormat format, const Extensible* container, void* item) const;
 	virtual void unserialize(SerializeFormat format, Extensible* container, const std::string& value);
-	virtual void free(void* item) = 0;
+	virtual void free(Extensible* container, void* item) = 0;
 };
 
 template <typename T, typename Del = stdalgo::defaultdeleter<T> >
@@ -190,7 +190,7 @@ class SimpleExtItem : public LocalExtItem
 		del(old);
 	}
 
-	virtual void free(void* item)
+	virtual void free(Extensible* container, void* item)
 	{
 		Del del;
 		del(static_cast<T*>(item));
@@ -216,7 +216,7 @@ class CoreExport LocalIntExt : public LocalExtItem
 	intptr_t get(const Extensible* container) const;
 	intptr_t set(Extensible* container, intptr_t value);
 	void unset(Extensible* container) { set(container, 0); }
-	void free(void* item);
+	void free(Extensible* container, void* item);
 };
 
 class CoreExport StringExtItem : public ExtensionItem
@@ -229,5 +229,5 @@ class CoreExport StringExtItem : public ExtensionItem
 	void unserialize(SerializeFormat format, Extensible* container, const std::string& value);
 	void set(Extensible* container, const std::string& value);
 	void unset(Extensible* container);
-	void free(void* item);
+	void free(Extensible* container, void* item);
 };
