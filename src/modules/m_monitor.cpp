@@ -18,6 +18,7 @@
 
 
 #include "inspircd.h"
+#include "modules/monitor.h"
 
 namespace IRCv3
 {
@@ -29,7 +30,6 @@ namespace IRCv3
 		class ManagerInternal;
 
 		typedef std::vector<Entry*> WatchedList;
-		typedef std::vector<LocalUser*> WatcherList;
 	}
 }
 
@@ -79,7 +79,7 @@ class IRCv3::Monitor::Manager
 
 		void unset(Extensible* container)
 		{
-			free(unset_raw(container));
+			free(container, unset_raw(container));
 		}
 
 		std::string serialize(SerializeFormat format, const Extensible* container, void* item) const
@@ -101,7 +101,7 @@ class IRCv3::Monitor::Manager
 
 		void unserialize(SerializeFormat format, Extensible* container, const std::string& value);
 
-		void free(void* item)
+		void free(Extensible* container, void* item)
 		{
 			delete static_cast<ExtData*>(item);
 		}
@@ -257,6 +257,26 @@ void IRCv3::Monitor::Manager::ExtItem::unserialize(SerializeFormat format, Exten
 
 #ifndef INSPIRCD_MONITOR_MANAGER_ONLY
 
+class IRCv3::Monitor::ManagerInternal : public IRCv3::Monitor::Manager
+{
+	Events::ModuleEventProvider evprov;
+
+ public:
+ 	ManagerInternal(Module* mod)
+		: IRCv3::Monitor::Manager(mod, "monitor")
+		, evprov(mod, "event/monitor")
+	{
+	}
+
+	WatchResult Watch(LocalUser* user, const std::string& nick, unsigned int maxwatch)
+	{
+		WatchResult ret = IRCv3::Monitor::Manager::Watch(user, nick, maxwatch);
+		if (ret == WR_OK)
+			FOREACH_MOD_CUSTOM(evprov, IRCv3::Monitor::EventListener, OnMonitorWatch, (user, nick));
+		return ret;
+	}
+};
+
 enum
 {
 	RPL_MONONLINE = 730,
@@ -309,7 +329,7 @@ class CommandMonitor : public SplitCommand
  public:
 	unsigned int maxmonitor;
 
-	CommandMonitor(Module* mod, IRCv3::Monitor::Manager& managerref)
+	CommandMonitor(Module* mod, IRCv3::Monitor::ManagerInternal& managerref)
 		: SplitCommand(mod, "MONITOR", 1)
 		, manager(managerref)
 	{
@@ -373,10 +393,32 @@ class CommandMonitor : public SplitCommand
 	}
 };
 
+IRCv3::Monitor::APIBase::APIBase(Module* parent)
+	: DataProvider(parent, "monitor_api")
+{
+}
+
+class MonitorAPIImpl : public IRCv3::Monitor::APIBase
+{
+	IRCv3::Monitor::Manager& manager;
+ public:
+	MonitorAPIImpl(Module* parent, IRCv3::Monitor::Manager& managerref)
+		: IRCv3::Monitor::APIBase(parent)
+		, manager(managerref)
+	{
+	}
+
+	const IRCv3::Monitor::WatcherList* GetWatcherList(const std::string& nick)
+	{
+		return manager.GetWatcherList(nick);
+	}
+};
+
 class ModuleMonitor : public Module
 {
-	IRCv3::Monitor::Manager manager;
+	IRCv3::Monitor::ManagerInternal manager;
 	CommandMonitor cmd;
+	MonitorAPIImpl apiimpl;
 
 	void SendAlert(unsigned int numeric, const std::string& nick)
 	{
@@ -393,8 +435,9 @@ class ModuleMonitor : public Module
 
  public:
 	ModuleMonitor()
-		: manager(this, "monitor")
+		: manager(this)
 		, cmd(this, manager)
+		, apiimpl(this, manager)
 	{
 	}
 
