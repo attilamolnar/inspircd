@@ -167,6 +167,8 @@ class CoreExport OperInfo : public refcountbase
 	/** Name of the oper type; i.e. the one shown in WHOIS */
 	std::string name;
 
+	OperInfo();
+
 	/** Get a configuration item, searching in the oper, type, and class blocks (in that order) */
 	std::string getConfig(const std::string& key);
 	void init();

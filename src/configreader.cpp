@@ -34,6 +34,8 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #endif
 
+static ConfigTag* GlobalEmptyTag;
+
 ServerConfig::ServerConfig()
 	: NoSnoticeStack(false)
 {
@@ -987,4 +989,18 @@ void ConfigReaderThread::Finish()
 		// whoops, abort!
 		ServerInstance->Config = old;
 	}
+}
+
+OperInfo::OperInfo()
+{
+	// XXX: Use a global empty tag that exists outside of ServerConfig because OperInfo instances may survive the deletion of ServerInstance->Config
+	if (!GlobalEmptyTag)
+	{
+		std::vector<KeyVal>* items;
+		GlobalEmptyTag = ConfigTag::create("empty", "<auto>", 0, items);
+		GlobalEmptyTag->refcount_inc();
+	}
+
+	oper_block = GlobalEmptyTag;
+	type_block = GlobalEmptyTag;
 }
