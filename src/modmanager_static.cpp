@@ -127,7 +127,6 @@ bool ModuleManager::Load(const std::string& inputname, bool defer)
 
 	FOREACH_MOD(OnLoadModule, (mod));
 	PrioritizeHooks();
-	ServerInstance->ISupport.Build();
 	return true;
 }
 

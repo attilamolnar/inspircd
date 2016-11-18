@@ -95,7 +95,6 @@ struct fakederef
 #include "inspstring.h"
 #include "protocol.h"
 #include "bancache.h"
-#include "isupportmanager.h"
 
 /** This class contains various STATS counters
  * It is used by the InspIRCd class, which internally
@@ -325,9 +324,6 @@ class CoreExport InspIRCd
 	/** Holds extensible for user operquit
 	 */
 	StringExtItem OperQuit;
-
-	/** Manages the generation and transmission of ISUPPORT. */
-	ISupportManager ISupport;
 
 	/** Get the current time
 	 * Because this only calls time() once every time around the mainloop,

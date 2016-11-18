@@ -521,7 +521,6 @@ bool LocalUser::CheckLines(bool doZline)
 void LocalUser::FullConnect()
 {
 	ServerInstance->stats.Connects++;
-	this->idle_lastmsg = ServerInstance->Time();
 
 	/*
 	 * You may be thinking "wtf, we checked this in User::AddClient!" - and yes, we did, BUT.
@@ -536,36 +535,6 @@ void LocalUser::FullConnect()
 
 	if (quitting)
 		return;
-
-	this->WriteNumeric(RPL_WELCOME, InspIRCd::Format("Welcome to the %s IRC Network %s", ServerInstance->Config->Network.c_str(), GetFullRealHost().c_str()));
-	this->WriteNumeric(RPL_YOURHOSTIS, InspIRCd::Format("Your host is %s, running version %s", ServerInstance->Config->ServerName.c_str(), INSPIRCD_BRANCH));
-	this->WriteNumeric(RPL_SERVERCREATED, InspIRCd::Format("This server was created %s %s", __TIME__, __DATE__));
-
-	const std::string& modelist = ServerInstance->Modes->GetModeListFor004Numeric();
-	this->WriteNumeric(RPL_SERVERVERSION, ServerInstance->Config->ServerName, INSPIRCD_BRANCH, modelist);
-
-	ServerInstance->ISupport.SendTo(this);
-
-	/* Now registered */
-	if (ServerInstance->Users->unregistered_count)
-		ServerInstance->Users->unregistered_count--;
-
-	/* Trigger MOTD and LUSERS output, give modules a chance too */
-	ModResult MOD_RESULT;
-	std::string command("LUSERS");
-	std::vector<std::string> parameters;
-	FIRST_MOD_RESULT(OnPreCommand, MOD_RESULT, (command, parameters, this, true, command));
-	if (!MOD_RESULT)
-		ServerInstance->Parser.CallHandler(command, parameters, this);
-
-	MOD_RESULT = MOD_RES_PASSTHRU;
-	command = "MOTD";
-	FIRST_MOD_RESULT(OnPreCommand, MOD_RESULT, (command, parameters, this, true, command));
-	if (!MOD_RESULT)
-		ServerInstance->Parser.CallHandler(command, parameters, this);
-
-	if (ServerInstance->Config->RawLog)
-		WriteServ("PRIVMSG %s :*** Raw I/O logging is enabled on this server. All messages, passwords, and commands are being recorded.", nick.c_str());
 
 	/*
 	 * We don't set REG_ALL until triggering OnUserConnect, so some module events don't spew out stuff

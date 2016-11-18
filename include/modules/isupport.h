@@ -1,6 +1,7 @@
 /*
  * InspIRCd -- Internet Relay Chat Daemon
  *
+ *   Copyright (C) 2016 Attila Molnar <attilamolnar@hush.com>
  *   Copyright (C) 2013 Peter Powell <petpow@saberuk.com>
  *
  * This file is part of InspIRCd.  InspIRCd is free software: you can
@@ -20,16 +21,20 @@
 #pragma once
 
 /** This class manages the generation and transmission of ISUPPORT. */
-class CoreExport ISupportManager
+class ISupportManager : public DataProvider
 {
- private:
 	/** The generated lines which are sent to clients. */
 	std::vector<Numeric::Numeric> cachedlines;
 
  public:
+	/** Constructor.
+	 * @param mod Owner module.
+	 */
+	ISupportManager(Module* mod);
+
 	/** (Re)build the ISUPPORT vector.
-	 * Called by the core on boot after all modules have been loaded, and every time when a module is loaded
-	 * or unloaded. Calls the On005Numeric hook, letting modules manipulate the ISUPPORT tokens.
+	 * Called on rehash, and every time when a module is loaded or unloaded. Calls the On005Numeric hook,
+	 * letting modules manipulate the ISUPPORT tokens.
 	 */
 	void Build();
 
@@ -41,5 +46,5 @@ class CoreExport ISupportManager
 	/** Send the 005 numerics (ISUPPORT) to a user.
 	 * @param user The user to send the ISUPPORT numerics to
 	 */
-	void SendTo(LocalUser* user);
+	void SendTo(LocalUser* user) const;
 };

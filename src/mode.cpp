@@ -618,8 +618,6 @@ void ModeParser::AddMode(ModeHandler* mh)
 		mhlist.prefix.push_back(pm);
 	else if (mh->IsListModeBase())
 		mhlist.list.push_back(mh->IsListModeBase());
-
-	RecreateModeListFor004Numeric();
 }
 
 bool ModeParser::DelMode(ModeHandler* mh)
@@ -678,7 +676,6 @@ bool ModeParser::DelMode(ModeHandler* mh)
 	else if (mh->IsListModeBase())
 		mhlist.list.erase(std::find(mhlist.list.begin(), mhlist.list.end(), mh->IsListModeBase()));
 
-	RecreateModeListFor004Numeric();
 	return true;
 }
 
@@ -706,25 +703,6 @@ PrefixMode* ModeParser::FindPrefixMode(unsigned char modeletter)
 	if (!mh)
 		return NULL;
 	return mh->IsPrefixMode();
-}
-
-std::string ModeParser::CreateModeList(ModeType mt, bool needparam)
-{
-	std::string modestr;
-
-	for (unsigned char mode = 'A'; mode <= 'z'; mode++)
-	{
-		ModeHandler* mh = modehandlers[mt][mode-65];
-		if ((mh) && ((!needparam) || (mh->NeedsParam(true))))
-			modestr.push_back(mode);
-	}
-
-	return modestr;
-}
-
-void ModeParser::RecreateModeListFor004Numeric()
-{
-	Cached004ModeList = CreateModeList(MODETYPE_USER) + " " + CreateModeList(MODETYPE_CHANNEL) + " " + CreateModeList(MODETYPE_CHANNEL, true);
 }
 
 PrefixMode* ModeParser::FindPrefix(unsigned const char pfxletter)

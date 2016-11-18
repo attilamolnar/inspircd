@@ -120,7 +120,6 @@ bool ModuleManager::Load(const std::string& modname, bool defer)
 
 	FOREACH_MOD(OnLoadModule, (newmod));
 	PrioritizeHooks();
-	ServerInstance->ISupport.Build();
 	return true;
 }
 

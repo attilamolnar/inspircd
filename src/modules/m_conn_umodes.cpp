@@ -28,7 +28,8 @@ class ModuleModesOnConnect : public Module
 	void Prioritize()
 	{
 		// for things like +x on connect, important, otherwise we have to resort to config order (bleh) -- w00t
-		ServerInstance->Modules->SetPriority(this, I_OnUserConnect, PRIORITY_FIRST);
+		Module* coreinfo = ServerInstance->Modules.Find("core_info.so");
+		ServerInstance->Modules.SetPriority(this, I_OnUserConnect, PRIORITY_AFTER, coreinfo);
 	}
 
 	Version GetVersion() CXX11_OVERRIDE

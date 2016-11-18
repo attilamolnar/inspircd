@@ -23,17 +23,20 @@
 
 #include "inspircd.h"
 #include "modules/httpd.h"
+#include "modules/isupport.h"
 #include "xline.h"
 
 class ModuleHttpStats : public Module, public HTTPRequestEventListener
 {
 	static const insp::flat_map<char, char const*>& entities;
 	HTTPdAPI API;
+	dynamic_reference_nocheck<ISupportManager> isupportmanager;
 
  public:
 	ModuleHttpStats()
 		: HTTPRequestEventListener(this)
 		, API(this)
+		, isupportmanager(this, "isupport")
 	{
 	}
 
@@ -108,15 +111,19 @@ class ModuleHttpStats : public Module, public HTTPRequestEventListener
 				data << "<socketcount>" << (SocketEngine::GetUsedFds()) << "</socketcount><socketmax>" << SocketEngine::GetMaxFds() << "</socketmax><socketengine>" INSPIRCD_SOCKETENGINE_NAME "</socketengine>";
 				data << "<uptime><boot_time_t>" << ServerInstance->startup_time << "</boot_time_t></uptime>";
 
-				data << "<isupport>";
-				const std::vector<Numeric::Numeric>& isupport = ServerInstance->ISupport.GetLines();
-				for (std::vector<Numeric::Numeric>::const_iterator i = isupport.begin(); i != isupport.end(); ++i)
+				if (isupportmanager)
 				{
-					const Numeric::Numeric& num = *i;
-					for (std::vector<std::string>::const_iterator j = num.GetParams().begin(); j != num.GetParams().end()-1; ++j)
-						data << "<token>" << Sanitize(*j) << "</token>" << std::endl;
+					data << "<isupport>";
+					const std::vector<Numeric::Numeric>& isupport = isupportmanager->GetLines();
+					for (std::vector<Numeric::Numeric>::const_iterator i = isupport.begin(); i != isupport.end(); ++i)
+					{
+						const Numeric::Numeric& num = *i;
+						for (std::vector<std::string>::const_iterator j = num.GetParams().begin(); j != num.GetParams().end()-1; ++j)
+							data << "<token>" << Sanitize(*j) << "</token>" << std::endl;
+					}
+					data << "</isupport>";
 				}
-				data << "</isupport></general><xlines>";
+				data << "</general><xlines>";
 				std::vector<std::string> xltypes = ServerInstance->XLines->GetAllTypes();
 				for (std::vector<std::string>::iterator it = xltypes.begin(); it != xltypes.end(); ++it)
 				{

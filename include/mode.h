@@ -559,20 +559,6 @@ class CoreExport ModeParser : public fakederef<ModeParser>
 	 */
 	ModeAction TryMode(User* user, User* targu, Channel* targc, Modes::Change& mcitem, bool SkipACL);
 
-	/** Returns a list of user or channel mode characters.
-	 * Used for constructing the parts of the mode list in the 004 numeric.
-	 * @param mt Controls whether to list user modes or channel modes
-	 * @param needparam Return modes only if they require a parameter to be set
-	 * @return The available mode letters that satisfy the given conditions
-	 */
-	std::string CreateModeList(ModeType mt, bool needparam = false);
-
-	/** Recreate the cached mode list that is displayed in the 004 numeric
-	 * in Cached004ModeList.
-	 * Called when a mode handler is added or removed.
-	 */
-	void RecreateModeListFor004Numeric();
-
 	/** Allocates an unused id for the given mode type, throws a ModuleException if out of ids.
 	 * @param mt The type of the mode to allocate the id for
 	 * @return The id
@@ -583,10 +569,6 @@ class CoreExport ModeParser : public fakederef<ModeParser>
 	 * Use GetLastParse() to get this value, to be used for  display purposes.
 	 */
 	std::string LastParse;
-
-	/** Cached mode list for use in 004 numeric
-	 */
-	std::string Cached004ModeList;
 
  public:
 	typedef std::vector<ListModeBase*> ListModeList;
@@ -753,14 +735,6 @@ class CoreExport ModeParser : public fakederef<ModeParser>
 	 */
 	PrefixMode* FindPrefix(unsigned const char pfxletter);
 
-	/** Returns a list of modes, space seperated by type:
-	 * 1. User modes
-	 * 2. Channel modes
-	 * 3. Channel modes that require a parameter when set
-	 * This is sent to users as the last part of the 004 numeric
-	 */
-	const std::string& GetModeListFor004Numeric();
-
 	/** Generates a list of modes, comma seperated by type:
 	 *  1; Listmodes EXCEPT those with a prefix
 	 *  2; Modes that take a param when adding or removing
@@ -797,11 +771,6 @@ class CoreExport ModeParser : public fakederef<ModeParser>
 	 */
 	void ShowListModeList(User* user, Channel* chan, ModeHandler* mh);
 };
-
-inline const std::string& ModeParser::GetModeListFor004Numeric()
-{
-	return Cached004ModeList;
-}
 
 inline PrefixMode* ModeHandler::IsPrefixMode()
 {

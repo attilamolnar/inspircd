@@ -151,14 +151,18 @@ class CommandTime : public ServerTargetCommand
 	CmdResult Handle(const std::vector<std::string>& parameters, User* user);
 };
 
+class ISupportManager;
+
 /** Handle /VERSION.
  */
 class CommandVersion : public Command
 {
+	const ISupportManager& isupportmanager;
+
  public:
 	/** Constructor for version.
 	 */
-	CommandVersion(Module* parent);
+	CommandVersion(Module* parent, const ISupportManager& isupportmgr);
 
 	/** Handle command.
 	 * @param parameters The parameters to the command

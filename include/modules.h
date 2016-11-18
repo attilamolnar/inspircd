@@ -234,6 +234,7 @@ enum Implementation
 	I_OnBuildNeighborList, I_OnGarbageCollect, I_OnSetConnectClass,
 	I_OnText, I_OnPassCompare, I_OnNamesListItem, I_OnNumeric,
 	I_OnPreRehash, I_OnModuleRehash, I_OnSendWhoLine, I_OnChangeIdent, I_OnSetUserIP,
+	I_OnServiceAdd, I_OnServiceDel,
 	I_END
 };
 
@@ -998,6 +999,16 @@ class CoreExport Module : public classbase, public usecountbase
 	 * @param user The user whose IP is being set
 	 */
 	virtual void OnSetUserIP(LocalUser* user);
+
+	/** Called whenever a ServiceProvider is registered.
+	 * @param service ServiceProvider being registered.
+	 */
+	virtual void OnServiceAdd(ServiceProvider& service);
+
+	/** Called whenever a ServiceProvider is unregistered.
+	 * @param service ServiceProvider being unregistered.
+	 */
+	virtual void OnServiceDel(ServiceProvider& service);
 };
 
 /** A list of modules
